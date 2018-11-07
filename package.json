@@ -6,7 +6,7 @@
   "scripts": {
     "build": "browserify src/index.js -o bundle.js",
     "watch": "watchify src/index.js -o bundle.js --debug --verbose",
-    "test": "tap -Rspec ./test/genome.test.js"
+    "test": "tap -Rspec ./test/sim.test.js"
   },
   "author": "Matthew Lloyd Beckers",
   "license": "ISC",

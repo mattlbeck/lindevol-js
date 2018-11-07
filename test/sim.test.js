@@ -13,7 +13,7 @@ describe("World", function() {
         world = new World(1, 1);
     });
     context("When a cell is added to the world", function() {
-        var cell = new Cell(0, 0);
+        var cell = new Cell(null, 0, 0);
         world.addCell(cell);
         it("can be found in the correct position on the world grid", function() {
             world.cells[0][0].should.equal(cell);
@@ -24,7 +24,7 @@ describe("World", function() {
 describe("Plant", function() {
     var world, plant, cell
     context("In a 3x2 world", function() {
-        beforeEach(function() {
+        before(function() {
             world = new World(3, 2);
             world.seed(1); // cell is at (1, 0)
             plant = world.plants[0];
@@ -39,35 +39,31 @@ describe("Plant", function() {
             });
         });
         context("Looking for a direction to grow", function() {
-            var directions = plant.getGrowDirection(cell)
+            var mask = plant.getNeighbourhood(cell)
             it("finds all empty neighbouring spaces", function() {
-                directions.should.have.lengthOf(5)
-            });
-            it("All identified spaces are one away from the source", function(){
-                directions.forEach(function(direction){
-                    assert.isAtLeast(direction[0], -1);
-                    assert.isAtMost(direction[0], 1);
-                    assert.isAtLeast(direction[1], -1)
-                    assert.isAtMost(direction[1], 1);
-                });
+                mask.should.equal(0)
             });
         });
-        context("Growing plant vertically", function() {
-            it("can grow directly up", function() {
+        
+        context("Growing plant", function() {
+            before("Grow plant", function(){
                 plant.growFromCell(cell, [0, 1]);
+            });
+            it("can grow directly up", function() {
                 assert.notTypeOf(world.cells[1][1], "null");
             });
-            it("can grow diagnoally", function() {
-                plant.growFromCell(cell, [1, 1]);
-                assert.notTypeOf(world.cells[2][1], "null");
+            it("neghbourhood has changed", function(){
+                plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6))
             });
-            it("can grow horizontally", function() {
-                plant.growFromCell(cell, [1, 0]);
-                assert.notTypeOf(world.cells[2][0], "null");
-            });
-            it("will not grow if outside of the world", function() {
-                expect(() => plant.growFromCell(cell, [0, -1])).to.throw();
+            context("Growing plant again", function(){
+                before("grow plant diagonally", function(){
+                    plant.growFromCell(cell, [1, 1]);
+                });
+                it("neghbourhood has changed", function(){
+                    plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6) + Math.pow(2,7))
+                });
             });
         });
     });
 });
+

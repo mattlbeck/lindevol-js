@@ -1,3 +1,4 @@
+var NEIGHBOURHOOD = [[-1,-1], [0,-1], [1,-1], [-1,0], [1,0], [-1,1], [0,1], [1,1]];
 
 class Action{
     constructor(actionCode){
@@ -27,12 +28,10 @@ class Divide extends Action{
     }
 
     getDirection(){
-        var directions = [[-1,-1], [-1,0], [-1,1], [ 0,1], [1,1], [1,0], [1,-1], [0,-1]];
-
         // extract the correct bits
         // & with 00000111 to mask out least sig bits
         var directionCode = this.code & 7;
-        return directions[directionCode];
+        return NEIGHBOURHOOD[directionCode];
     }
 }
 
@@ -77,4 +76,4 @@ class ActionMap {
     }
 }
 
-module.exports = {Divide, MutatePlus, MutateMinus, LocalSeed, FlyingSeed, ActionMap};
+module.exports = {Divide, MutatePlus, MutateMinus, LocalSeed, FlyingSeed, ActionMap, NEIGHBOURHOOD};
