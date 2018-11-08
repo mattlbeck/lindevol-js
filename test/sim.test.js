@@ -98,7 +98,7 @@ describe("Plant", function() {
     var world, plant, cell
     context("In a 3x2 world", function() {
         beforeEach(function() {
-            world = new World({"world_width": 3, "world_height": 2});
+            world = new World({"world_width": 3, "world_height": 2, "action_map": [220, 16, 0, 10, 10, 0]});
             world.seed(1); // cell is at (1, 0)
             plant = world.plants[0];
             cell = plant.cells[0];
@@ -129,14 +129,14 @@ describe("Plant", function() {
                 assert.notTypeOf(world.cells[1][1], "null");
             });
             it("neghbourhood has changed", function(){
-                plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6))
+                plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6));
             });
             context("Growing plant again", function(){
                 beforeEach("grow plant diagonally", function(){
                     plant.growFromCell(cell, [1, 1]);
                 });
                 it("neghbourhood has changed", function(){
-                    plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6) + Math.pow(2,7))
+                    plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6) + Math.pow(2,7));
                 });
             });
         });
@@ -149,7 +149,15 @@ describe("Plant", function() {
             it("the plant grows directly up", function(){
                 plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6));
             });
-            
+        });
+        context("Given a gene for flying seed", function(){
+            beforeEach("Add gene to plant and execute action", function(){
+                plant.genome = new ByteArray([0, 221]);
+                plant.action(new GenomeInterpreter());
+            });
+            it("there are now two plants", function(){
+                world.plants.length.should.equal(2);
+            });
         });
     });
 });

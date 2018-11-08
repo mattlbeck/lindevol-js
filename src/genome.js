@@ -33,23 +33,27 @@ class Rule {
         this.state = state;
         this.action = action;
     }
+
+    toString(){
+        return `${this.state} -> ${this.action}`;
+    }
 }
 
 class GenomeInterpreter{
     /**
      * Methods that decode genomes into rules
      */
-    constructor(mapping=[224, 0, 0, 16, 16, 0]){
-        this.mapping = new ActionMap(mapping)
+    constructor(mapping){
+        this.mapping = new ActionMap(mapping);
     }
     
     interpret(bytearray){
         var rules = []
         for(var i=0; i < bytearray.length; i+=2){
-            var action = this.mapping.getAction(bytearray[i+1])
-            rules.push(new Rule(bytearray[i], action))
+            var action = this.mapping.getAction(bytearray[i+1]);
+            rules.push(new Rule(bytearray[i], action));
         }
-        return rules
+        return rules;
     }
 }
 

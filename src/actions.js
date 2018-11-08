@@ -34,23 +34,40 @@ class Divide extends Action{
         var directionCode = this.code & 7;
         return NEIGHBOURHOOD[directionCode];
     }
+
+    toString(){
+        return `divide ${this.getDirection()}`;
+    }
 }
 
 class MutatePlus extends Action{
     execute(cell){
-        // cell.plant.mutate
+        super.execute(cell);
+    }
+
+    toString(){
+        return "mut+";
     }
 }
 
 class MutateMinus extends Action{
     execute(cell){
-        // cell.plant.mutate
+        super.execute(cell);
+    }
+
+    toString(){
+        return "mut-";
     }
 }
 
 class FlyingSeed extends Action{
     execute(cell){
-        // cell.plant.seed
+        super.execute(cell);
+        cell.plant.world.seed(null, cell.plant.genome);
+    }
+
+    toString(){
+        return "flyingseed";
     }
 }
 
@@ -58,19 +75,23 @@ class LocalSeed extends Action{
     execute(cell){
         // cell.plant.seed
     }
+
+    toString(){
+        return "localseed";
+    }
 }
 
 class ActionMap {
 
-    constructor(mapping=[224, 0, 0, 16, 16, 0]){
+    constructor(mapping=[220, 15, 0, 10, 10, 0]){
         this.mapping = mapping;
         this.actions = [Divide, FlyingSeed, LocalSeed, MutatePlus, MutateMinus];
     }
 
     getAction(actionCode){
-        var mappingCount = 0
+        var mappingCount = 0;
         for(var i=0; i<this.mapping.length; i++){
-            mappingCount += this.mapping[i]
+            mappingCount += this.mapping[i];
             if (actionCode < mappingCount){
                 return new this.actions[i](actionCode);
             }

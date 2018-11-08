@@ -12,6 +12,10 @@ class Cell{
         ctx.fillRect(x, y, size, size);
         ctx.strokeRect(x, y, size, size);
     }
+
+    toString(){
+        return `Cell at (${this.x}, ${this.y}) energy: ${this.energised}`;
+    }
 }
 
 export {Cell};

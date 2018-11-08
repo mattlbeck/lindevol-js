@@ -3,9 +3,9 @@ import {ByteArray, GenomeInterpreter} from "./genome.js";
 
 class SimulationParams{
     constructor(params={}){
-        this.world_width = 80;
+        this.world_width = 250;
         this.world_height = 40;
-        this.initial_population = 60;
+        this.initial_population = 250;
         
         this.energy_prob = 0.5;
 
@@ -14,6 +14,10 @@ class SimulationParams{
         this.natural_exp = 0;
         this.energy_exp = -2.5;
         this.leanover_factor = 0.15;
+
+        // divide, flyingseed, localseed, mut+, mut-, statebit
+        this.initial_genome_length = 200;
+        this.action_map = [200, 20, 0, 18, 18, 0];
 
         Object.assign(this, params);
     }
@@ -28,6 +32,7 @@ class World {
         this.stepnum = 0;
 
         this.cells = [];
+        // initialise the world lattice to all nulls
         for(var i=0; i<this.width; i++){
             this.cells.push([]);
             for(var j=0; j<this.height; j++){
@@ -36,15 +41,36 @@ class World {
         }
 
         this.plants = [];
-        this.genomeInterpreter = new GenomeInterpreter();
+        this.genomeInterpreter = new GenomeInterpreter(params.action_map);
     }
 
-    seed(x){
+    seed(x=null, genome=null){
         // Create a new plant seed on the world floor
-        var g = ByteArray.random(20);
-        var plant = new Plant(x, this, g);
-        this.plants.push(plant);
-        this.cells[x][0] = plant.cells[0];
+        if (genome===null){
+            genome = ByteArray.random(this.params.initial_genome_length);
+        }
+        if (x===null){
+            // find a random empty space
+            var emptySpaces = [];
+            for(var i=0; i<this.width; i++){
+                if(this.cells[i][0] === null){
+                    emptySpaces.push(i);
+                }
+            }
+            if(emptySpaces.length > 0){
+                x = emptySpaces[Math.floor(Math.random()*(emptySpaces.length-1))];
+            }
+            else{
+                return false;
+            }
+        }
+        if (this.cells[x][0] === null){
+            var plant = new Plant(x, this, genome);
+            this.plants.push(plant);
+            this.addCell(plant.cells[0]);
+            return true;
+        }
+        return false;
     }
 
     getCell(x, y){
