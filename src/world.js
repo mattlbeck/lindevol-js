@@ -94,7 +94,7 @@ class World {
                 this.params.energy_exp,
                 this.params.leanover_factor
             );
-            if (Math.random() > deathProb){
+            if (Math.random() < deathProb){
                 dead_plants.push(plant);
             }
         }, this);

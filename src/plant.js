@@ -97,6 +97,9 @@ class Plant{
         }, this);
 
         var leanoverCells = 2/(numCells*(numCells-1));
+        if (leanoverCells === Infinity){
+            leanoverCells = 0;
+        }
 
         var leanoverTerm = leanoverCells*Math.abs(leanoverEnergised);
         
