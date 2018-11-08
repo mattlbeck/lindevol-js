@@ -10,7 +10,7 @@ class Action{
     }
 
     execute(cell){
-
+        cell.energised = false;
     }
 }
 
@@ -19,6 +19,7 @@ class Divide extends Action{
     execute(cell){
         // the 2 least significant bits of the action code
         // determines which direction the divide action is for
+        super.execute(cell);
         var direction = this.getDirection();
         cell.plant.growFromCell(cell, direction);
     }

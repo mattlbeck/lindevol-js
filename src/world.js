@@ -1,10 +1,23 @@
 import {Plant} from "./plant.js";
 import {ByteArray, GenomeInterpreter} from "./genome.js";
 
+class SimulationParams{
+    constructor(params={}){
+        this.world_width = 80;
+        this.world_height = 40;
+        this.initial_population = 60;
+        
+        this.energy_prob = 0.5;
+
+        Object.assign(this, params);
+    }
+}
+
 class World {
-    constructor(width, height){
-        this.width = width;
-        this.height = height;
+    constructor(params=new SimulationParams()){
+        this.params = params;
+        this.width = params.world_width;
+        this.height = params.world_height;
 
         this.stepnum = 0;
 
@@ -17,7 +30,7 @@ class World {
         }
 
         this.plants = [];
-        this.genomeInterpreter = new GenomeInterpreter()
+        this.genomeInterpreter = new GenomeInterpreter();
     }
 
     seed(x){
@@ -30,9 +43,9 @@ class World {
 
     getCell(x, y){
         if (x in this.cells){
-            return this.cells[x][y]
+            return this.cells[x][y];
         }
-        return undefined
+        return undefined;
     }
 
     addCell(cell){
@@ -43,6 +56,7 @@ class World {
 
     step(){
         this.stepnum++;
+        this.simulateLight();
         this.plants.forEach(function(plant){
             plant.action(this.genomeInterpreter);
         }, this);
@@ -53,26 +67,46 @@ class World {
         this.plants.forEach(function(plant){
             for(var  i=0; i<plant.genome.length; i++){
                 if(Math.random() > 0.9){
-                    var mbit = Math.pow(2, Math.floor(Math.random()*7))
-                    plant.genome[i] = plant.genome[i] ^ mbit
+                    var mbit = Math.pow(2, Math.floor(Math.random()*7));
+                    plant.genome[i] = plant.genome[i] ^ mbit;
                 }
             }
         });
     }
 
+    /**
+     * Simulate light. Sunlight traverses from the ceiling of the world
+     * downwards vertically. It is caught by a plant cell with a probability
+     * which causes that cell to be energised.
+     */
+    simulateLight(){
+        for(var x=0; x<this.width; x++){
+            for(var y=0; y<this.height; y++){
+                var cell = this.cells[x][this.height-y-1];
+                if(cell !== null){
+                    if(Math.random() <= this.params.energy_prob){
+                        cell.energised = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     draw(ctx, width, height, cellSize){
-        var numDraws = 0
+        var numDraws = 0;
         this.plants.forEach(function(plant){
             plant.cells.forEach(function(cell){
                 var x = cell.x * cellSize;
                 var y = cellSize * (this.height - cell.y);
                 // console.log("Draw " + [x, y]);
-                cell.draw(ctx, x, y - cellSize, cellSize, "gray");
+                var colour = cell.energised ? "black" : "grey";
+                cell.draw(ctx, x, y - cellSize, cellSize, colour);
                 numDraws++;
             }, this);
         }, this);
-        document.querySelector("#cellnum").textContent = numDraws
+        document.querySelector("#cellnum").textContent = numDraws;
     }
 }
 
-export { World };
+export { World, SimulationParams };

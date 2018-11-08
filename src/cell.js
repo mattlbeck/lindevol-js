@@ -1,10 +1,10 @@
 
 class Cell{
     constructor(plant, x, y){
-        this.plant = plant
+        this.plant = plant;
         this.x = x;
         this.y = y;
-        this.energised = true;
+        this.energised = false;
     }
 
     draw(ctx, x, y, size, colour){

@@ -1,5 +1,5 @@
 
-import {World} from "./world.js";
+import {World, SimulationParams} from "./world.js";
 
 var canvas = document.querySelector("#mainbox");
 var ctx = canvas.getContext("2d");
@@ -11,14 +11,13 @@ document.querySelector("#step").addEventListener("click", function (){
 
 var cellSize = 10;
 
-var params = {
-    "initial_population": 60
-}
-
-var world = new World(Math.floor(canvas.width/cellSize), Math.floor(canvas.height/cellSize));
+var params = new SimulationParams({
+    "initial_population": 20
+});
+var world = new World(params);
 console.log(world)
 // randomly choose spots to seed the world with
-for (var i=0; i<params["initial_population"]; i++){
+for (var i=0; i<params.initial_population; i++){
     var x = Math.floor(Math.random()*world.width);
     world.seed(x);
 }
