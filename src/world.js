@@ -9,6 +9,12 @@ class SimulationParams{
         
         this.energy_prob = 0.5;
 
+        // death params
+        this.death_factor = 0.35;
+        this.natural_exp = 0;
+        this.energy_exp = -2.5;
+        this.leanover_factor = 0.15;
+
         Object.assign(this, params);
     }
 }
@@ -56,6 +62,7 @@ class World {
 
     step(){
         this.stepnum++;
+        this.simulateDeath();
         this.simulateLight();
         this.plants.forEach(function(plant){
             plant.action(this.genomeInterpreter);
@@ -72,6 +79,39 @@ class World {
                 }
             }
         });
+    }
+
+    /**
+     * Use each plant's current death probability to simulate
+     * whether each plant dies on this step
+     */
+    simulateDeath(){
+        var dead_plants = [];
+        this.plants.forEach(function(plant){
+            var deathProb = plant.getDeathProbability(
+                this.params.death_factor,
+                this.params.natural_exp,
+                this.params.energy_exp,
+                this.params.leanover_factor
+            );
+            if (Math.random() > deathProb){
+                dead_plants.push(plant);
+            }
+        }, this);
+        dead_plants.forEach(function(plant){
+            this.killPlant(plant);
+        }, this);
+    }
+
+    /**
+     * Remove plant from world plant list.
+     * Remove all cells from cell grid
+     */
+    killPlant(plant){
+        this.plants.splice(this.plants.indexOf(plant), 1);
+        plant.cells.forEach(function(cell){
+            this.cells[cell.x][cell.y] = null;
+        }, this);
     }
 
     /**
@@ -93,7 +133,7 @@ class World {
         }
     }
 
-    draw(ctx, width, height, cellSize){
+    draw(ctx, cellSize){
         var numDraws = 0;
         this.plants.forEach(function(plant){
             plant.cells.forEach(function(cell){

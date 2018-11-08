@@ -9,7 +9,7 @@ class Plant{
 
     getNeighbourhood(cell){
         // Return the neighbourhood mask
-        var mask = 0
+        var mask = 0;
         for(var i=0; i<NEIGHBOURHOOD.length; i++){
             var pos = NEIGHBOURHOOD[i];
             var x = cell.x + pos[0];
@@ -17,7 +17,7 @@ class Plant{
             try{
                 var worldPos = this.world.cells[x][y];
             }
-            catch {
+            catch(error){
                 continue;
             }
             if (worldPos instanceof Cell){
@@ -74,6 +74,33 @@ class Plant{
         var new_cell = new Cell(this, x, y);
         this.cells.push(new_cell);
         this.world.addCell(new_cell);
+    }
+
+    /**
+     * Calculate whether this plant should die.
+     * @param {} natural_exp exponent to the number of cells
+     * @param {*} energy_exp exponent to the number of energy rich cells
+     * @param {*} leanover_factor factor to the leanover term
+     */
+    getDeathProbability(death_factor, natural_exp, energy_exp, leanover_factor){
+        var numCells = this.cells.length;
+        var numEnergised = 0;
+        var leanoverEnergised = 0;
+        var rootCell = this.cells[0];
+        this.cells.forEach(function(cell){
+            if(cell.energised){
+                numEnergised++;
+
+                var le = this.world.width/2 - ( ( (3*this.world.width)/2 ) + cell.x - rootCell.x )  % this.world.width/2;
+                leanoverEnergised += le;
+            }
+        }, this);
+
+        var leanoverCells = 2/(numCells*(numCells-1));
+
+        var leanoverTerm = leanoverCells*Math.abs(leanoverEnergised);
+        
+        return death_factor * Math.pow(numCells, natural_exp) * Math.pow(numEnergised, energy_exp) * leanover_factor*leanoverTerm;
     }
 
     draw(ctx) {

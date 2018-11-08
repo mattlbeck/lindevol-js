@@ -3,6 +3,7 @@ import {World, SimulationParams} from "./world.js";
 
 var canvas = document.querySelector("#mainbox");
 var ctx = canvas.getContext("2d");
+ctx.translate(0.5, 0.5);
 
 // control
 document.querySelector("#step").addEventListener("click", function (){
@@ -15,7 +16,6 @@ var params = new SimulationParams({
     "initial_population": 20
 });
 var world = new World(params);
-console.log(world)
 // randomly choose spots to seed the world with
 for (var i=0; i<params.initial_population; i++){
     var x = Math.floor(Math.random()*world.width);
@@ -23,9 +23,11 @@ for (var i=0; i<params.initial_population; i++){
 }
 
 function drawScreen(){
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = "black";
-    
-    world.draw(ctx, canvas.width, canvas.height, cellSize);
+    world.draw(ctx, cellSize);
+    ctx.restore();
 }
 
 function gameLoop(){
