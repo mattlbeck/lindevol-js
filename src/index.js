@@ -11,10 +11,14 @@ document.querySelector("#step").addEventListener("click", function (){
 
 var cellSize = 10;
 
+var params = {
+    "initial_population": 60
+}
+
 var world = new World(Math.floor(canvas.width/cellSize), Math.floor(canvas.height/cellSize));
 console.log(world)
 // randomly choose spots to seed the world with
-for (var i=0; i<60; i++){
+for (var i=0; i<params["initial_population"]; i++){
     var x = Math.floor(Math.random()*world.width);
     world.seed(x);
 }
@@ -27,15 +31,20 @@ function drawScreen(){
 
 function gameLoop(){
     world.step();
+    updateStats();
     drawScreen();
     window.requestAnimationFrame(gameLoop);
 }
 
+function updateStats(){
+    document.querySelector("#stepnum").textContent = world.stepnum
+}
 
 function simStep(){
     world.step();
+    
     drawScreen();
 }
 
-drawScreen()
+gameLoop()
 

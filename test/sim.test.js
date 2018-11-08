@@ -4,17 +4,14 @@ var expect = require('chai').expect
 
 import {World} from "../src/world.js";
 import {Cell} from "../src/cell.js";
+import {ByteArray, GenomeInterpreter} from "../src/genome.js";
 
 describe("World", function() {
     var world = new World(1, 1);
     context("Using coordinates outside world limits", function(){
-        it("getter throws an error", function(){
-            expect(() => world.getCell(1,0)).to.throw(/world coordinates/)
-            expect(() => world.getCell(0,1)).to.throw(/world coordinates/)
-        });
-        it("setter throws an error", function(){
-            expect(() => world.addCell(new Cell(null, 1, 0))).to.throw(/world coordinates/)
-            expect(() => world.addCell(new Cell(null, 0, 1))).to.throw(/world coordinates/)
+        it("getter returns undefined", function(){
+            assert.typeOf(world.getCell(1,0), "undefined")
+            assert.typeOf(world.getCell(0,1), "undefined")
         });
     })
     context("When a cell is added to the world", function() {
@@ -29,7 +26,7 @@ describe("World", function() {
 describe("Plant", function() {
     var world, plant, cell
     context("In a 3x2 world", function() {
-        before(function() {
+        beforeEach(function() {
             world = new World(3, 2);
             world.seed(1); // cell is at (1, 0)
             plant = world.plants[0];
@@ -54,7 +51,7 @@ describe("Plant", function() {
         });
         
         context("Growing plant", function() {
-            before("Grow plant", function(){
+            beforeEach("Grow plant", function(){
                 plant.growFromCell(cell, [0, 1]);
             });
             it("can grow directly up", function() {
@@ -64,13 +61,24 @@ describe("Plant", function() {
                 plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6))
             });
             context("Growing plant again", function(){
-                before("grow plant diagonally", function(){
+                beforeEach("grow plant diagonally", function(){
                     plant.growFromCell(cell, [1, 1]);
                 });
                 it("neghbourhood has changed", function(){
                     plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6) + Math.pow(2,7))
                 });
             });
+        });
+
+        context("Given a gene for dividing vertically", function(){
+            beforeEach("Add gene to plant and execute action", function(){
+                plant.genome = new ByteArray([0, 6]);
+                plant.action(new GenomeInterpreter())
+            });
+            it("the plant grows directly up", function(){
+                plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6));
+            });
+            
         });
     });
 });

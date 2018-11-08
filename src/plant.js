@@ -43,12 +43,14 @@ class Plant{
     }
 
     action(genomeInterpreter){
+        var rules = genomeInterpreter.interpret(this.genome);
         this.cells.forEach(function(cell){
-            var rules = genomeInterpreter.interpret(this.genome);
             var mask = this.getNeighbourhood(cell);
             rules.forEach(function(rule){
-                if (rule.mask === mask){
-                    rule.action.execute(this);
+                // execute one action using the first matching rule
+                if (rule.state === mask){
+                    rule.action.execute(cell);
+                    return;
                 }
             }, this);
         }, this);
@@ -56,12 +58,20 @@ class Plant{
     }
 
     /**
-     * Grow the plant by one cell
+     * Grow the plant by one cell if possible
      * @param {*} cell the cell to grow from
      * @param {*} direction the direction to grow in
      */
     growFromCell(cell, direction){
-        var new_cell = new Cell(this, cell.x+direction[0], cell.y+direction[1]);
+        var x = cell.x+direction[0], y = cell.y+direction[1];
+        // check if space is clear
+        var space = this.world.getCell(x, y)
+        if (space !== null){
+            return;
+        }
+
+        // grow cell in to empty space
+        var new_cell = new Cell(this, x, y);
         this.cells.push(new_cell);
         this.world.addCell(new_cell);
     }

@@ -19,7 +19,7 @@ class Divide extends Action{
     execute(cell){
         // the 2 least significant bits of the action code
         // determines which direction the divide action is for
-        direction = this.getDirection();
+        var direction = this.getDirection();
         cell.plant.growFromCell(cell, direction);
     }
 
@@ -67,12 +67,14 @@ class ActionMap {
     }
 
     getAction(actionCode){
+        var mappingCount = 0
         for(var i=0; i<this.mapping.length; i++){
-            if (actionCode < this.mapping[i]){
+            mappingCount += this.mapping[i]
+            if (actionCode < mappingCount){
                 return new this.actions[i](actionCode);
             }
-
         }
+        throw `Action code ${actionCode} does not map to an action`
     }
 }
 

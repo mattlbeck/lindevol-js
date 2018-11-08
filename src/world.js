@@ -6,6 +6,8 @@ class World {
         this.width = width;
         this.height = height;
 
+        this.stepnum = 0;
+
         this.cells = [];
         for(var i=0; i<this.width; i++){
             this.cells.push([]);
@@ -27,47 +29,49 @@ class World {
     }
 
     getCell(x, y){
-        try {
-            cell = this.cells[x][y];
-            if(cell === undefined){
-                throw ""
-            }
-            return cell
+        if (x in this.cells){
+            return this.cells[x][y]
         }
-        catch(error) {
-            throw "world coordinates out of bounds when adding cell";
-        } 
+        return undefined
     }
 
     addCell(cell){
-        try {
-            if (this.cells[cell.x][cell.y] !== undefined) {
-                this.cells[cell.x][cell.y] = cell;
-            }
-            else {
-                throw "";
-            }
-        }
-        catch(error) {
-            throw "world coordinates out of bounds when adding cell";
+        if (this.cells[cell.x][cell.y] !== undefined) {
+            this.cells[cell.x][cell.y] = cell;
         }
     }
 
     step(){
+        this.stepnum++;
         this.plants.forEach(function(plant){
             plant.action(this.genomeInterpreter);
         }, this);
+        this.mutate();
+    }
+
+    mutate(){
+        this.plants.forEach(function(plant){
+            for(var  i=0; i<plant.genome.length; i++){
+                if(Math.random() > 0.9){
+                    var mbit = Math.pow(2, Math.floor(Math.random()*7))
+                    plant.genome[i] = plant.genome[i] ^ mbit
+                }
+            }
+        });
     }
 
     draw(ctx, width, height, cellSize){
+        var numDraws = 0
         this.plants.forEach(function(plant){
             plant.cells.forEach(function(cell){
                 var x = cell.x * cellSize;
                 var y = cellSize * (this.height - cell.y);
                 // console.log("Draw " + [x, y]);
                 cell.draw(ctx, x, y - cellSize, cellSize, "gray");
+                numDraws++;
             }, this);
         }, this);
+        document.querySelector("#cellnum").textContent = numDraws
     }
 }
 
