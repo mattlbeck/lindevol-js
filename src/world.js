@@ -1,6 +1,7 @@
-var Plant = require("./plant.js");
+import {Plant} from "./plant.js";
+import {ByteArray, GenomeInterpreter} from "./genome.js";
 
-class World{
+class World {
     constructor(width, height){
         this.width = width;
         this.height = height;
@@ -14,29 +15,48 @@ class World{
         }
 
         this.plants = [];
+        this.genomeInterpreter = new GenomeInterpreter()
     }
 
     seed(x){
         // Create a new plant seed on the world floor
-        var plant = new Plant(x, this);
+        var g = ByteArray.random(20);
+        var plant = new Plant(x, this, g);
         this.plants.push(plant);
         this.cells[x][0] = plant.cells[0];
     }
 
+    getCell(x, y){
+        try {
+            cell = this.cells[x][y];
+            if(cell === undefined){
+                throw ""
+            }
+            return cell
+        }
+        catch(error) {
+            throw "world coordinates out of bounds when adding cell";
+        } 
+    }
+
     addCell(cell){
-        if (this.cells[cell.x][cell.y] !== undefined) {
-            this.cells[cell.x][cell.y] = cell;
+        try {
+            if (this.cells[cell.x][cell.y] !== undefined) {
+                this.cells[cell.x][cell.y] = cell;
+            }
+            else {
+                throw "";
+            }
         }
-        else {
-            throw "Cell can not be added outside of world limits"
+        catch(error) {
+            throw "world coordinates out of bounds when adding cell";
         }
-        
     }
 
     step(){
         this.plants.forEach(function(plant){
-            plant.grow();
-        });
+            plant.action(this.genomeInterpreter);
+        }, this);
     }
 
     draw(ctx, width, height, cellSize){
@@ -51,4 +71,4 @@ class World{
     }
 }
 
-module.exports = World
+export { World };

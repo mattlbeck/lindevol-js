@@ -14,4 +14,4 @@ class Cell{
     }
 }
 
-module.exports = Cell;
+export {Cell};

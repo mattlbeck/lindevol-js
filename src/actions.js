@@ -20,7 +20,7 @@ class Divide extends Action{
         // the 2 least significant bits of the action code
         // determines which direction the divide action is for
         direction = this.getDirection();
-        cell.plant.grow(cell, direction);
+        cell.plant.growFromCell(cell, direction);
     }
 
     get params(){
@@ -76,4 +76,4 @@ class ActionMap {
     }
 }
 
-module.exports = {Divide, MutatePlus, MutateMinus, LocalSeed, FlyingSeed, ActionMap, NEIGHBOURHOOD};
+export {Divide, MutatePlus, MutateMinus, LocalSeed, FlyingSeed, ActionMap, NEIGHBOURHOOD};

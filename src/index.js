@@ -1,5 +1,5 @@
 
-var World = require("./world.js");
+import {World} from "./world.js";
 
 var canvas = document.querySelector("#mainbox");
 var ctx = canvas.getContext("2d");
@@ -14,7 +14,7 @@ var cellSize = 10;
 var world = new World(Math.floor(canvas.width/cellSize), Math.floor(canvas.height/cellSize));
 console.log(world)
 // randomly choose spots to seed the world with
-for (var i=0; i<1; i++){
+for (var i=0; i<60; i++){
     var x = Math.floor(Math.random()*world.width);
     world.seed(x);
 }

@@ -1,4 +1,4 @@
-actions = require("./actions.js")
+import {ActionMap} from "./actions.js"
 
 class ByteArray extends Uint8Array{
 
@@ -14,6 +14,14 @@ class ByteArray extends Uint8Array{
         else{
             super(length)
         }
+    }
+
+    static random(length){
+        var ba = new ByteArray(length)
+        for(var i=0; i<ba.length;i++){
+            ba[i] = Math.floor(Math.random()*255)
+        }
+        return ba
     }
 
 }
@@ -32,7 +40,7 @@ class GenomeInterpreter{
      * Methods that decode genomes into rules
      */
     constructor(mapping=[224, 0, 0, 16, 16, 0]){
-        this.mapping = new actions.ActionMap(mapping)
+        this.mapping = new ActionMap(mapping)
     }
     
     interpret(bytearray){
@@ -45,4 +53,4 @@ class GenomeInterpreter{
     }
 }
 
-module.exports = {ByteArray, GenomeInterpreter}
+export {ByteArray, GenomeInterpreter};

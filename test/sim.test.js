@@ -1,17 +1,22 @@
-require("tap").mochaGlobals();
 var should = require('chai').should();
 var assert = require('chai').assert
 var expect = require('chai').expect
 
-const Plant = require("../src/plant.js");
-const World = require("../src/world.js");
-const Cell = require("../src/cell.js");
+import {World} from "../src/world.js";
+import {Cell} from "../src/cell.js";
 
 describe("World", function() {
-    var world
-    before("New world for a single cell", function(){
-        world = new World(1, 1);
-    });
+    var world = new World(1, 1);
+    context("Using coordinates outside world limits", function(){
+        it("getter throws an error", function(){
+            expect(() => world.getCell(1,0)).to.throw(/world coordinates/)
+            expect(() => world.getCell(0,1)).to.throw(/world coordinates/)
+        });
+        it("setter throws an error", function(){
+            expect(() => world.addCell(new Cell(null, 1, 0))).to.throw(/world coordinates/)
+            expect(() => world.addCell(new Cell(null, 0, 1))).to.throw(/world coordinates/)
+        });
+    })
     context("When a cell is added to the world", function() {
         var cell = new Cell(null, 0, 0);
         world.addCell(cell);
@@ -39,7 +44,10 @@ describe("Plant", function() {
             });
         });
         context("Looking for a direction to grow", function() {
-            var mask = plant.getNeighbourhood(cell)
+            var mask;
+            before(function() {
+                mask = plant.getNeighbourhood(cell)
+            });
             it("finds all empty neighbouring spaces", function() {
                 mask.should.equal(0)
             });

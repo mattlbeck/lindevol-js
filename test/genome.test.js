@@ -1,12 +1,9 @@
-var tap = require("tap")
-require("tap").mochaGlobals();
 var should = require('chai').should();
 var assert = require('chai').assert
 var expect = require('chai').expect
 
-var genome = require("../src/genome.js")
-var actions = require("../src/actions.js")
-var ByteArray = genome.ByteArray
+import {ByteArray, GenomeInterpreter} from "../src/genome.js";
+import {Divide} from "../src/actions.js";
 describe("Byte array", function(){
     describe("When init with 1, 2, 4, 8, 16, 32, 64, and 128", function(){
         // create the vals dynamically
@@ -15,7 +12,7 @@ describe("Byte array", function(){
             vals.push(Math.pow(2, v));
         }
 
-        bytes = new ByteArray(vals.length);
+        var bytes = new ByteArray(vals.length);
         for(var i=0; i<vals.length; i++){
             bytes[i] = vals[i];
         }
@@ -71,22 +68,23 @@ describe("Byte array", function(){
 
 });
 
-tap.test("Block interpretation", function(t){
+describe("Block interpretation", function(){
     var genome = require("../src/genome.js")
-    var interpreter = new genome.GenomeInterpreter()
-    var ba = new ByteArray([0,0])
-    var rules = interpreter.interpret(ba)
-    rules.should.have.lengthOf(1)
-    rule = rules.pop()
-    rule.state.should.equal(0)
-    assert.instanceOf(rule.action, actions.Divide)
-    assert.deepEqual(rule.action.params, [-1, -1])
+    var interpreter = new GenomeInterpreter()
 
-    ba = new ByteArray([0, 0, 0, 9, 17, 210])
-    rules = interpreter.interpret(ba)
-    rules.should.have.length(3)
-    assert.deepEqual(rules.shift().action.params, [-1, -1])
-    assert.deepEqual(rules.shift().action.params, [0, -1])
-    assert.deepEqual(rules.shift().action.params, [1, -1])
-    t.end()
+    var ba = new ByteArray([0, 0, 0, 9, 17, 210])
+    var rules = interpreter.interpret(ba)
+    
+    it("interprets the correct number of rules", function(){
+        rules.should.have.length(3)
+    });
+    it("Interprets divide actions", function(){
+        var rule = rules[0]
+        assert.instanceOf(rule.action, Divide)
+    });
+    it("Interprets divide params correctly", function(){
+        assert.deepEqual(rules.shift().action.params, [-1, -1])
+        assert.deepEqual(rules.shift().action.params, [0, -1])
+        assert.deepEqual(rules.shift().action.params, [1, -1])
+    });
 })
