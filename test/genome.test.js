@@ -2,7 +2,7 @@ var should = require('chai').should();
 var assert = require('chai').assert
 var expect = require('chai').expect
 
-import {ByteArray, GenomeInterpreter} from "../src/genome.js";
+import {ByteArray, BlockInterpreter, PromotorInterpreter} from "../src/genome.js";
 import {Divide} from "../src/actions.js";
 describe("Byte array", function(){
     describe("When init with 1, 2, 4, 8, 16, 32, 64, and 128", function(){
@@ -69,8 +69,7 @@ describe("Byte array", function(){
 });
 
 describe("Block interpretation", function(){
-    var genome = require("../src/genome.js")
-    var interpreter = new GenomeInterpreter([220, 15, 0, 10, 10, 0])
+    var interpreter = new BlockInterpreter([220, 15, 0, 10, 10, 0])
 
     var ba = new ByteArray([0, 0, 0, 9, 17, 210])
     var rules = interpreter.interpret(ba)
@@ -86,5 +85,22 @@ describe("Block interpretation", function(){
         assert.deepEqual(rules.shift().action.params, [-1, -1])
         assert.deepEqual(rules.shift().action.params, [0, -1])
         assert.deepEqual(rules.shift().action.params, [1, -1])
+    });
+})
+
+describe("Promotor interpretation", function(){
+    var interpreter = new PromotorInterpreter([220, 15, 0, 10, 10, 0])
+    var rules;
+    beforeEach("interpret", function(){
+        var ba = new ByteArray([128, 0, 64]);
+        rules = interpreter.interpret(ba)
+    })
+    it("interprets the correct number of rules", function(){
+        rules.should.have.length(1);
+    });
+    it("Interprets terminator 64 as divide action [-1, -1]", function(){
+        var rule = rules[0]
+        assert.instanceOf(rule.action, Divide)
+        assert.deepEqual(rule.action.params, [-1, -1])
     });
 })
