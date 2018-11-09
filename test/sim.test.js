@@ -13,8 +13,10 @@ describe("World", function() {
             world = new World({"world_width": 1, "world_height": 1});
         });
         context("Using coordinates outside world limits", function(){
+            it("x wraps around", function(){
+                assert.typeOf(world.getCell(1,0), "null");
+            })
             it("getter returns undefined", function(){
-                assert.typeOf(world.getCell(1,0), "undefined");
                 assert.typeOf(world.getCell(0,1), "undefined");
             });
         })

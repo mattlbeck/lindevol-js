@@ -78,11 +78,15 @@ class World {
         return false;
     }
 
-    getCell(x, y){
-        if (x in this.cells){
-            return this.cells[x][y];
+    getX(x){
+        if(x < 0){
+            x = this.width + x;
         }
-        return undefined;
+        return x % this.width;
+    }
+
+    getCell(x, y){
+        return this.cells[this.getX(x)][y];
     }
 
     addCell(cell){

@@ -4,7 +4,7 @@ import {NEIGHBOURHOOD} from "./actions.js";
 class Plant{
     constructor(x, world, genome) {
         this.world = world;
-        this.cells = [new Cell(this, x, 0)];
+        this.cells = [new Cell(this, this.world.getX(x), 0)];
         this.genome = genome;
     }
 
@@ -84,7 +84,7 @@ class Plant{
             this.world.killPlant(space.plant);
         }
         // grow cell in to empty space
-        var new_cell = new Cell(this, x, y);
+        var new_cell = new Cell(this, this.world.getX(x), y);
         this.cells.push(new_cell);
         this.world.addCell(new_cell);
     }
