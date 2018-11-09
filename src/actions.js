@@ -66,7 +66,7 @@ class MutateMinus extends Action{
 class FlyingSeed extends Action{
     execute(cell){
         super.execute(cell);
-        cell.plant.world.seed(null, cell.plant.genome.copy());
+        cell.plant.world.seed(cell.plant.genome.copy());
     }
 
     toString(){
@@ -86,7 +86,7 @@ class LocalSeed extends Action{
 
 class ActionMap {
 
-    constructor(mapping=[220, 15, 0, 10, 10, 0]){
+    constructor(mapping){
         this.mapping = mapping;
         this.actions = [Divide, FlyingSeed, LocalSeed, MutatePlus, MutateMinus];
     }

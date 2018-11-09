@@ -46,14 +46,16 @@ class Plant{
     action(genomeInterpreter){
         var rules = genomeInterpreter.interpret(this.genome);
         this.cells.forEach(function(cell){
-            var mask = this.getNeighbourhood(cell);
-            rules.forEach(function(rule){
-                // execute one action using the first matching rule
-                if (rule.state === mask){
-                    rule.action.execute(cell);
-                    return;
-                }
-            }, this);
+            if (cell.energised){
+                var mask = this.getNeighbourhood(cell);
+                rules.forEach(function(rule){
+                    // execute one action using the first matching rule
+                    if (rule.state === mask){
+                        rule.action.execute(cell);
+                        return;
+                    }
+                }, this);
+            }
         }, this);
 
     }

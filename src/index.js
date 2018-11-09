@@ -1,5 +1,5 @@
 
-import {World, SimulationParams} from "./world.js";
+import {Simulation, SimulationParams} from "./simulation.js";
 import { Cell } from "./cell.js";
 import $ from "jquery";
 
@@ -24,9 +24,9 @@ var selectedCell = null;
 
 function updateCellFocus(){
     if (selectedCell !== null){
-        var cell = world.getCell(selectedCell[0], selectedCell[1]);
+        var cell = simulation.world.getCell(selectedCell[0], selectedCell[1]);
         if (cell !== null){
-            var rules = world.genomeInterpreter.interpret(cell.plant.genome);
+            var rules = simulation.genomeInterpreter.interpret(cell.plant.genome);
             var neighbourhood = cell.plant.getNeighbourhood(cell);
             var matching_rule = "None";
             for(var i=0; i<rules.length; i++){
@@ -55,7 +55,7 @@ canvas.addEventListener("click", function(event){
     var cellx = Math.floor(x / cellSize),
         celly = Math.floor(y / cellSize);
    
-    var cell = world.getCell(cellx, celly);
+    var cell = simulation.world.getCell(cellx, celly);
     console.log(`Clicked ${cell}`);
     if (cell instanceof Cell){
         selectedCell = [cellx, celly];
@@ -69,18 +69,14 @@ var cellSize = 10;
 var params = new SimulationParams({
     "initial_population": 250
 });
-var world = new World(params);
-// randomly choose spots to seed the world with
-for (var i=0; i<params.initial_population; i++){
-    var x = Math.floor(Math.random()*world.width);
-    world.seed(x);
-}
+var simulation = new Simulation(params);
+simulation.init_population();
 
 function drawScreen(){
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = "black";
-    world.draw(ctx, cellSize);
+    simulation.world.draw(ctx, cellSize);
     ctx.restore();
 }
 
@@ -92,11 +88,11 @@ function gameLoop(){
 }
 
 function updateStats(){
-    document.querySelector("#stepnum").textContent = world.stepnum;
+    document.querySelector("#stepnum").textContent = simulation.stepnum;
 }
 
 function simStep(){
-    world.step();
+    simulation.step();
     updateCellFocus();
     updateStats();
     drawScreen();
