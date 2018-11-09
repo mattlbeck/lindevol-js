@@ -5,45 +5,59 @@ import $ from "jquery";
 
 var canvas = document.querySelector("#mainbox");
 var ctx = canvas.getContext("2d");
-ctx.translate(0.5, 0.5);
+var canvasOffset = 0.5;
+ctx.translate(canvasOffset, canvasOffset);
 
 // control
 document.querySelector("#step").addEventListener("click", function (){
     simStep();
+});
+var run = false;
+$("#run").on("click", function (){
+    run = !run;
+    if(run){
+        gameLoop();
+    }
 });
 
 var selectedCell = null;
 
 function updateCellFocus(){
     if (selectedCell !== null){
-        var rules = world.genomeInterpreter.interpret(selectedCell.plant.genome);
-        var neighbourhood = selectedCell.plant.getNeighbourhood(selectedCell);
-        var matching_rule = "None";
-        for(var i=0; i<rules.length; i++){
-            if(rules[i].state === neighbourhood){
-                matching_rule = `#${i} ${rules[i]}`;
+        var cell = world.getCell(selectedCell[0], selectedCell[1]);
+        if (cell !== null){
+            var rules = world.genomeInterpreter.interpret(cell.plant.genome);
+            var neighbourhood = cell.plant.getNeighbourhood(cell);
+            var matching_rule = "None";
+            for(var i=0; i<rules.length; i++){
+                if(rules[i].state === neighbourhood){
+                    matching_rule = `#${i} ${rules[i]}`;
+                }
             }
+            var death = cell.plant.getDeathProbability(params.death_factor, params.natural_exp, params.energy_exp, params.leanover_factor);
+            var cellinfo = $("#cellinfo");
+            cellinfo.empty();
+            cellinfo.append(`<p>${cell.toString()}</p><p>Neighbourhood: ${neighbourhood}</p><p>Rule: ${matching_rule}</p>`);
+            cellinfo.append(`<p>Plant death prob ${JSON.stringify(death)}</p>`);
+            rules.forEach(function(rule){
+                cellinfo.append(`<p>${rule.toString()}</p>`);
+            });
         }
-        var cellinfo = $("#cellinfo");
-        cellinfo.empty();
-        cellinfo.append(`<p>${selectedCell.toString()} Neighbourhood: ${neighbourhood} Rule: ${matching_rule}</p>`);
-        rules.forEach(function(rule){
-            cellinfo.append(`<p>${rule.toString()}</p>`);
-        });
     }
 }
 
 canvas.addEventListener("click", function(event){
-    var x = event.pageX, 
-        y = canvas.height - event.pageY;
-    
+    console.log([event.pageX, event.pageY, canvas.height])
+    var x = event.pageX-canvas.offsetLeft+canvasOffset, 
+        y = (canvas.height - (event.pageY-canvas.offsetTop))+canvasOffset;
+    console.log([x,y])
     var cellx = Math.floor(x / cellSize),
         celly = Math.floor(y / cellSize);
    
     var cell = world.getCell(cellx, celly);
     console.log(`Clicked ${cell}`);
     if (cell instanceof Cell){
-        selectedCell = cell;
+        selectedCell = [cellx, celly];
         updateCellFocus();
     }
 
@@ -71,7 +85,9 @@ function drawScreen(){
 
 function gameLoop(){
     simStep();
-    window.requestAnimationFrame(gameLoop);
+    if(run){
+        window.requestAnimationFrame(gameLoop);
+    }
 }
 
 function updateStats(){

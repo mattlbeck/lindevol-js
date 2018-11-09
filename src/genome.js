@@ -1,27 +1,32 @@
-import {ActionMap} from "./actions.js"
+import {ActionMap} from "./actions.js";
 
 class ByteArray extends Uint8Array{
 
-    constructor(bytes=null, length=0){
+    constructor(bytes=null, length=0, initial_mut_exp=0){
         if (bytes){
             if (typeof(bytes) === "string"){
-                super(bytes.split(''))
+                super(bytes.split(''));
             }
             else{
-                super(bytes)
+                super(bytes);
             }
         }
         else{
-            super(length)
+            super(length);
         }
+        this.mut_exp = initial_mut_exp;
     }
 
     static random(length){
-        var ba = new ByteArray(length)
+        var ba = new ByteArray(length);
         for(var i=0; i<ba.length;i++){
-            ba[i] = Math.floor(Math.random()*255)
+            ba[i] = Math.floor(Math.random()*255);
         }
-        return ba
+        return ba;
+    }
+
+    copy(){
+        return new ByteArray(this, null, this.initial_mut_exp);
     }
 
 }

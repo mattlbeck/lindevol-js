@@ -63,7 +63,7 @@ class MutateMinus extends Action{
 class FlyingSeed extends Action{
     execute(cell){
         super.execute(cell);
-        cell.plant.world.seed(null, cell.plant.genome);
+        cell.plant.world.seed(null, cell.plant.genome.copy());
     }
 
     toString(){

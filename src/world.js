@@ -10,10 +10,15 @@ class SimulationParams{
         this.energy_prob = 0.5;
 
         // death params
-        this.death_factor = 0.35;
+        this.death_factor = 0.2;
         this.natural_exp = 0;
         this.energy_exp = -2.5;
-        this.leanover_factor = 0.15;
+        this.leanover_factor = 0.2;
+
+        // mutations
+        this.mut_replacement = 0.001;
+        this.mut_factor = 1.5;
+        this.initial_mut_exp = 0;
 
         // divide, flyingseed, localseed, mut+, mut-, statebit
         this.initial_genome_length = 200;
@@ -98,13 +103,14 @@ class World {
 
     mutate(){
         this.plants.forEach(function(plant){
+            var p_mut = this.params.mut_replacement * Math.pow(this.params.mut_factor, plant.genome.mut_exp);
             for(var  i=0; i<plant.genome.length; i++){
-                if(Math.random() > 0.9){
+                if(Math.random() <= p_mut){
                     var mbit = Math.pow(2, Math.floor(Math.random()*7));
                     plant.genome[i] = plant.genome[i] ^ mbit;
                 }
             }
-        });
+        }, this);
     }
 
     /**
@@ -120,7 +126,7 @@ class World {
                 this.params.energy_exp,
                 this.params.leanover_factor
             );
-            if (Math.random() < deathProb){
+            if (Math.random() <= deathProb.prob){
                 dead_plants.push(plant);
             }
         }, this);

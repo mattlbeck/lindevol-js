@@ -2,7 +2,7 @@ var should = require('chai').should();
 var assert = require('chai').assert
 var expect = require('chai').expect
 
-import {World} from "../src/world.js";
+import {World, SimulationParams} from "../src/world.js";
 import {Cell} from "../src/cell.js";
 import {ByteArray, GenomeInterpreter} from "../src/genome.js";
 
@@ -98,7 +98,7 @@ describe("Plant", function() {
     var world, plant, cell
     context("In a 3x2 world", function() {
         beforeEach(function() {
-            world = new World({"world_width": 3, "world_height": 2, "action_map": [220, 16, 0, 10, 10, 0]});
+            world = new World(new SimulationParams({"world_width": 3, "world_height": 2, "action_map": [220, 16, 0, 10, 10, 0]}));
             world.seed(1); // cell is at (1, 0)
             plant = world.plants[0];
             cell = plant.cells[0];
@@ -157,6 +157,20 @@ describe("Plant", function() {
             });
             it("there are now two plants", function(){
                 world.plants.length.should.equal(2);
+            });
+        });
+        context("Given a diagonally grown plant", function(){
+            beforeEach("grow plant diagonally", function(){
+                plant.growFromCell(cell, [1, 1]);
+            });
+            it("the leanover term is the same as the leanover factor", function(){
+                var dprob = plant.getDeathProbability(
+                    world.params.death_factor,
+                    world.params.natural_exp,
+                    world.params.energy_exp,
+                    world.params.leanover_factor
+                );
+                dprob.leanover.should.equal(world.params.leanover_factor);
             });
         });
     });

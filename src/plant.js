@@ -88,14 +88,14 @@ class Plant{
         var numEnergised = 0;
         var leanoverEnergised = 0;
         var rootCell = this.cells[0];
-        this.cells.forEach(function(cell){
+        for(var i=0; i<this.cells.length; i++){
+            var cell = this.cells[i];
             if(cell.energised){
                 numEnergised++;
-
-                var le = this.world.width/2 - ( ( (3*this.world.width)/2 ) + cell.x - rootCell.x )  % this.world.width/2;
-                leanoverEnergised += le;
             }
-        }, this);
+            var le = this.world.width/2 - ( (( 1.5*this.world.width ) + cell.x - rootCell.x)  % this.world.width);
+            leanoverEnergised += le;
+        }
 
         var leanoverCells = 2/(numCells*(numCells-1));
         if (leanoverCells === Infinity){
@@ -104,7 +104,16 @@ class Plant{
 
         var leanoverTerm = leanoverCells*Math.abs(leanoverEnergised);
         
-        return death_factor * Math.pow(numCells, natural_exp) * Math.pow(numEnergised, energy_exp) * leanover_factor*leanoverTerm;
+        var d_natural = Math.pow(numCells, natural_exp);
+        var d_energy = Math.pow(numEnergised+1, energy_exp);
+        var d_leanover = leanover_factor*leanoverTerm;
+        var pDeath = death_factor * d_natural * d_energy + d_leanover;
+        return {
+            "prob": pDeath,
+            "natural": d_natural,
+            "energy": d_energy,
+            "leanover": d_leanover
+        };
     }
 }
 
