@@ -67,14 +67,36 @@ class Plant{
         var x = cell.x+direction[0], y = cell.y+direction[1];
         // check if space is clear
         var space = this.world.getCell(x, y);
-        if (space !== null){
+        if (space === undefined){
             return;
         }
-
+        if (space instanceof Cell){
+            if (space.plant === this){
+                return;
+            }
+            // this plant will kill the other
+            // with a probability...
+            if(Math.random() > space.plant.getKillProbability()){
+                // attack failed
+                return;
+            }
+            // attack succeeded
+            this.world.killPlant(space.plant);
+        }
         // grow cell in to empty space
         var new_cell = new Cell(this, x, y);
         this.cells.push(new_cell);
         this.world.addCell(new_cell);
+    }
+
+    getKillProbability(){
+        var numEnergy = 0;
+        this.cells.forEach(function(cell){
+            if(cell.energised){
+                numEnergy+=1;
+            }
+        });
+        return 1/numEnergy;
     }
 
     /**

@@ -95,7 +95,7 @@ describe("World", function() {
 });
 
 describe("Plant", function() {
-    var world, plant, cell
+    var world, plant, cell;
     context("In a 3x2 world", function() {
         beforeEach(function() {
             world = new World(new SimulationParams({"world_width": 3, "world_height": 2, "action_map": [220, 16, 0, 10, 10, 0]}));
@@ -174,5 +174,50 @@ describe("Plant", function() {
             });
         });
     });
+
+    context("In a world with two plants", function(){
+        beforeEach(function() {
+            world = new World(new SimulationParams({"world_width": 2, "world_height": 2, "action_map": [220, 16, 0, 10, 10, 0]}));
+            world.seed(0); // cell is at (1, 0)
+            world.seed(1);
+            plant = world.plants[0];
+            cell = plant.cells[0];
+        });
+        it("there are two plants", function(){
+            world.plants.length.should.equal(2);
+        });
+        context("When a plant grows into a non-energised plant", function(){
+            beforeEach(function(){
+                world.plants[0].growFromCell(world.plants[0].cells[0], [1,0]);
+            });
+            it("there is one plant", function(){
+                world.plants.length.should.equal(1);
+            });
+            it("the plant has two cells", function(){
+                world.plants[0].cells.length.should.equal(2);
+            });
+        });
+        context("When a plant grows into a plant with one energy", function(){
+            beforeEach(function(){
+                world.plants[1].cells[0].energised = true;
+                world.plants[0].growFromCell(world.plants[0].cells[0], [1,0]);
+            });
+            it("there is one plant", function(){
+                world.plants.length.should.equal(1);
+            });
+            it("the plant has two cells", function(){
+                world.plants[0].cells.length.should.equal(2);
+            });
+        });
+        context("When a plant grows into itself", function(){
+            beforeEach(function(){
+                world.plants[0].growFromCell(world.plants[0].cells[0], [0,0]);
+            });
+            it("Nothing happens", function(){
+                world.plants.length.should.equal(2);
+            });
+        });
+    })
+    
 });
 
