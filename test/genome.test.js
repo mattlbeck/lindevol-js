@@ -70,7 +70,7 @@ describe("Byte array", function(){
 
 describe("Block interpretation", function(){
     var genome = require("../src/genome.js")
-    var interpreter = new GenomeInterpreter()
+    var interpreter = new GenomeInterpreter([220, 15, 0, 10, 10, 0])
 
     var ba = new ByteArray([0, 0, 0, 9, 17, 210])
     var rules = interpreter.interpret(ba)
