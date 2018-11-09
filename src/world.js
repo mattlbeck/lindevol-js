@@ -107,7 +107,7 @@ class World {
 
     mutate(){
         this.plants.forEach(function(plant){
-            var p_mut = this.params.mut_replacement * Math.pow(this.params.mut_factor, plant.genome.mut_exp);
+            var p_mut = plant.genome.getMutationProbability(this.params);
             for(var  i=0; i<plant.genome.length; i++){
                 if(Math.random() <= p_mut){
                     var mbit = Math.pow(2, Math.floor(Math.random()*7));

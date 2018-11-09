@@ -25,6 +25,10 @@ class ByteArray extends Uint8Array{
         return ba;
     }
 
+    getMutationProbability(params){
+        return params.mut_replacement * Math.pow(params.mut_factor, this.mut_exp);
+    }
+
     copy(){
         return new ByteArray(this, null, this.initial_mut_exp);
     }

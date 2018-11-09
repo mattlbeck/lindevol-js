@@ -1,4 +1,5 @@
-var NEIGHBOURHOOD = [[-1,-1], [0,-1], [1,-1], [-1,0], [1,0], [-1,1], [0,1], [1,1]];
+const NEIGHBOURHOOD = [[-1,-1], [0,-1], [1,-1], [-1,0], [1,0], [-1,1], [0,1], [1,1]];
+const MUT_INCREMENT = 0.001;
 
 class Action{
     constructor(actionCode){
@@ -43,6 +44,7 @@ class Divide extends Action{
 class MutatePlus extends Action{
     execute(cell){
         super.execute(cell);
+        cell.plant.genome.mut_exp += MUT_INCREMENT;
     }
 
     toString(){
@@ -53,6 +55,7 @@ class MutatePlus extends Action{
 class MutateMinus extends Action{
     execute(cell){
         super.execute(cell);
+        cell.plant.genome.mut_exp -= MUT_INCREMENT;
     }
 
     toString(){

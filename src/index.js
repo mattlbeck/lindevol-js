@@ -39,6 +39,7 @@ function updateCellFocus(){
             cellinfo.empty();
             cellinfo.append(`<p>${cell.toString()}</p><p>Neighbourhood: ${neighbourhood}</p><p>Rule: ${matching_rule}</p>`);
             cellinfo.append(`<p>Plant death prob ${JSON.stringify(death)}</p>`);
+            cellinfo.append(`<p>mut exponent:${cell.plant.genome.mut_exp} mut: ${cell.plant.genome.getMutationProbability(params)}</p>`);
             rules.forEach(function(rule){
                 cellinfo.append(`<p>${rule.toString()}</p>`);
             });
