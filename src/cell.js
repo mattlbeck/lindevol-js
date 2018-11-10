@@ -10,7 +10,7 @@ class Cell{
     draw(ctx, x, y, size, colour){
         ctx.fillStyle = colour;
         ctx.fillRect(x, y, size, size);
-        ctx.strokeRect(x, y, size, size);
+        //ctx.strokeRect(x, y, size, size);
     }
 
     toString(){
