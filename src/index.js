@@ -67,7 +67,8 @@ canvas.addEventListener("click", function(event){
 var cellSize = 10;
 
 var params = new SimulationParams({
-    "initial_population": 250
+    "initial_population": 250,
+    "mut_replacement": 0.0001
 });
 var simulation = new Simulation(params);
 simulation.init_population();
