@@ -5,6 +5,13 @@ class Cell{
         this.x = x;
         this.y = y;
         this.energised = false;
+        this.internalState = 0;
+        this.nextInternalState = 0;
+    }
+
+    updateState(){
+        this.internalState = this.nextInternalState;
+        this.nextInternalState = 0;
     }
 
     draw(ctx, x, y, size, colour){

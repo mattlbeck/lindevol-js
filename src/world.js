@@ -73,12 +73,20 @@ class World {
         }
     }
 
+    getHeightDelta(ctx, cellSize){
+        // find the delat between canvas height and world height in pixels
+        var canvasHeight = ctx.canvas.height;
+        var realHeight = (cellSize * this.height);
+        return canvasHeight - realHeight;
+    }
+
     draw(ctx, cellSize){
         var numDraws = 0;
         this.plants.forEach(function(plant){
             plant.cells.forEach(function(cell){
                 var x = cell.x * cellSize;
-                var y = cellSize * (this.height - cell.y);
+                
+                var y = cellSize * (this.height - cell.y) + this.getHeightDelta(ctx, cellSize);
                 var colour = this.getCellColour(plant, cell);
                 cell.draw(ctx, x, y - cellSize, cellSize, colour);
                 this.drawCellBorders(ctx, cell, cellSize);
@@ -99,7 +107,7 @@ class World {
                     return;
                 }
             }
-            var px = (cell.x*cellSize), py = cellSize * (this.height - cell.y);
+            var px = (cell.x*cellSize), py = cellSize * (this.height - cell.y)+this.getHeightDelta(ctx, cellSize);
             if (d[0] > 0){
                 px += cellSize;
             }

@@ -11,18 +11,29 @@ class Action{
     }
 
     execute(cell){
-        cell.energised = false;
+        // actions are typically only carried out if the cell has energy
+        // and the cell loses energy as a result.
+        if (cell.energised){
+            var success = this.doAction(cell);
+            cell.energised = !success;
+        }
+        
+    }
+
+    doAction(cell){
+
     }
 }
 
 class Divide extends Action{
 
-    execute(cell){
+    doAction(cell){
         // the 2 least significant bits of the action code
         // determines which direction the divide action is for
-        super.execute(cell);
+        super.doAction(cell);
         var direction = this.getDirection();
         cell.plant.growFromCell(cell, direction);
+        return true;
     }
 
     get params(){
@@ -42,9 +53,10 @@ class Divide extends Action{
 }
 
 class MutatePlus extends Action{
-    execute(cell){
-        super.execute(cell);
+    doAction(cell){
+        super.doAction(cell);
         cell.plant.genome.mut_exp += MUT_INCREMENT;
+        return true;
     }
 
     toString(){
@@ -53,9 +65,10 @@ class MutatePlus extends Action{
 }
 
 class MutateMinus extends Action{
-    execute(cell){
-        super.execute(cell);
+    doAction(cell){
+        super.doAction(cell);
         cell.plant.genome.mut_exp -= MUT_INCREMENT;
+        return true;
     }
 
     toString(){
@@ -64,9 +77,9 @@ class MutateMinus extends Action{
 }
 
 class FlyingSeed extends Action{
-    execute(cell){
-        super.execute(cell);
-        cell.plant.world.seed(cell.plant.genome.copy());
+    doAction(cell){
+        super.doAction(cell);
+        return cell.plant.world.seed(cell.plant.genome.copy());
     }
 
     toString(){
@@ -75,7 +88,7 @@ class FlyingSeed extends Action{
 }
 
 class LocalSeed extends Action{
-    execute(cell){
+    doAction(cell){
         // cell.plant.seed
     }
 
@@ -84,11 +97,25 @@ class LocalSeed extends Action{
     }
 }
 
+class StateBitN extends Action{
+    doAction(cell) {
+        cell.nextInternalState = cell.nextInternalState & Math.pow(2, this.getNthBit());
+        // this action does not consume energy
+        return false;
+    }
+
+    getNthBit(){
+        // extract the correct bits
+        // & with 00001111 to mask out least sig bits
+        return this.code & 15;
+    }
+}
+
 class ActionMap {
 
     constructor(mapping){
         this.mapping = mapping;
-        this.actions = [Divide, FlyingSeed, LocalSeed, MutatePlus, MutateMinus];
+        this.actions = [Divide, FlyingSeed, LocalSeed, MutatePlus, MutateMinus, StateBitN];
     }
 
     getAction(actionCode){

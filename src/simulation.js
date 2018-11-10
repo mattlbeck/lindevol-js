@@ -1,5 +1,5 @@
 import {World} from "./world.js";
-import {ByteArray, GenomeInterpreter} from "./genome.js";
+import {ByteArray, BlockInterpreter, PromotorInterpreter, Mutator} from "./genome.js";
 
 class SimulationParams{
     constructor(params={}){
@@ -16,12 +16,17 @@ class SimulationParams{
         this.leanover_factor = 0.2;
 
         // mutations
-        this.mut_replacement = 0.001;
+        this.mut_replace_mode = "bytewise";
+        this.mut_replace = 0.002;
+        this.mut_insert = 0.0004;
+        this.mut_delete = 0.0004;
         this.mut_factor = 1.5;
         this.initial_mut_exp = 0;
 
-        // divide, flyingseed, localseed, mut+, mut-, statebit
+        this.genome_interpreter = "block";
         this.initial_genome_length = 400;
+
+        // divide, flyingseed, localseed, mut+, mut-, statebit
         this.action_map = [200, 20, 0, 18, 18, 0];
 
         Object.assign(this, params);
@@ -32,8 +37,19 @@ class Simulation {
     constructor(params) {
         this.params = params;
         this.world = new World(this.params.world_width, this.params.world_height);
-        this.genomeInterpreter = new GenomeInterpreter(params.action_map);
+        this.genomeInterpreter = this.getInterpreter();
         this.stepnum = 0;
+    }
+
+    getInterpreter(){
+        switch (this.params.genome_interpreter){
+        case "block":
+            return new BlockInterpreter(this.params.action_map);
+        case "promotor":
+            return new PromotorInterpreter(this.params.action_map);
+        default:
+            throw new Error(`Unknown interpreter ${this.params.genome_interpreter}`);
+        }  
     }
 
     init_population(){
@@ -53,21 +69,41 @@ class Simulation {
         this.stepnum++;
         this.simulateDeath();
         this.simulateLight();
-        this.world.plants.forEach(function(plant){
-            plant.action(this.genomeInterpreter);
-        }, this);
+        this.simulateActions();
         this.mutate();
     }
 
-    mutate(){
+    simulateActions(){
         this.world.plants.forEach(function(plant){
-            var p_mut = plant.genome.getMutationProbability(this.params);
-            for(var  i=0; i<plant.genome.length; i++){
-                if(Math.random() <= p_mut){
-                    var mbit = Math.pow(2, Math.floor(Math.random()*7));
-                    plant.genome[i] = plant.genome[i] ^ mbit;
-                }
+            var rules = this.genomeInterpreter.interpret(plant.genome);
+            plant.cells.forEach(function(cell){
+                this.cellAction(cell, rules);
+            }, this);
+        }, this);
+    }
+
+    cellAction(cell, rules){
+        var state;
+        if (this.genomeInterpreter instanceof BlockInterpreter){
+            state = cell.plant.getNeighbourhood(cell);
+        }
+        else if(this.genomeInterpreter instanceof PromotorInterpreter){
+            state = cell.plant.getState(cell);
+        }
+        rules.forEach(function(rule){
+            // execute one action using the first matching rule
+            // if (rule.matches(state)){
+            if (rule.matches(state)){
+                rule.action.execute(cell);
             }
+        }, this);
+        cell.updateState();
+    }
+
+    mutate(){
+        var mutator = new Mutator(this.params.mut_factor, this.params.mut_replace, this.params.mut_insert, this.params.mut_delete, 0, this.params.mut_replace_mode, this.params.units);
+        this.world.plants.forEach(function(plant){
+            mutator.mutate(plant.genome);
         }, this);
     }
 
