@@ -1,5 +1,5 @@
 
-import {World, SimulationParams} from "./world.js";
+import {Simulation, SimulationParams} from "./simulation.js";
 import { Cell } from "./cell.js";
 import $ from "jquery";
 
@@ -24,9 +24,9 @@ var selectedCell = null;
 
 function updateCellFocus(){
     if (selectedCell !== null){
-        var cell = world.getCell(selectedCell[0], selectedCell[1]);
+        var cell = simulation.world.getCell(selectedCell[0], selectedCell[1]);
         if (cell !== null){
-            var rules = world.genomeInterpreter.interpret(cell.plant.genome);
+            var rules = simulation.genomeInterpreter.interpret(cell.plant.genome);
             var neighbourhood = cell.plant.getNeighbourhood(cell);
             var matching_rule = "None";
             for(var i=0; i<rules.length; i++){
@@ -34,12 +34,12 @@ function updateCellFocus(){
                     matching_rule = `#${i} ${rules[i]}`;
                 }
             }
-            var death = cell.plant.getDeathProbability(params.death_factor, params.natural_exp, params.energy_exp, params.leanover_factor);
+            var death = cell.plant.getDeathProbability(simulation.params.death_factor, simulation.params.natural_exp, simulation.params.energy_exp, simulation.params.leanover_factor);
             var cellinfo = $("#cellinfo");
             cellinfo.empty();
             cellinfo.append(`<p>${cell.toString()}</p><p>Neighbourhood: ${neighbourhood}</p><p>Rule: ${matching_rule}</p>`);
-            cellinfo.append(`<p>Plant death prob ${JSON.stringify(death)}</p>`);
-            cellinfo.append(`<p>mut exponent:${cell.plant.genome.mut_exp} mut: ${cell.plant.genome.getMutationProbability(params)}</p>`);
+            cellinfo.append(`<p>Plant death prob ${JSON.stringify(death)} genome length ${cell.plant.genome.length}</p>`);
+            cellinfo.append(`<p>mut exponent:${cell.plant.genome.mut_exp}</p>`);
             rules.forEach(function(rule){
                 cellinfo.append(`<p>${rule.toString()}</p>`);
             });
@@ -48,15 +48,12 @@ function updateCellFocus(){
 }
 
 canvas.addEventListener("click", function(event){
-    console.log([event.pageX, event.pageY, canvas.height])
     var x = event.pageX-canvas.offsetLeft+canvasOffset, 
         y = (canvas.height - (event.pageY-canvas.offsetTop))+canvasOffset;
-    console.log([x,y])
     var cellx = Math.floor(x / cellSize),
         celly = Math.floor(y / cellSize);
    
-    var cell = world.getCell(cellx, celly);
-    console.log(`Clicked ${cell}`);
+    var cell = simulation.world.getCell(cellx, celly);
     if (cell instanceof Cell){
         selectedCell = [cellx, celly];
         updateCellFocus();
@@ -64,23 +61,38 @@ canvas.addEventListener("click", function(event){
 
 });
 
-var cellSize = 10;
+var cellSize = 8;
 
-var params = new SimulationParams({
-    "initial_population": 250
+// Lindevol P params
+var params_p = new SimulationParams({
+    "world_width": 500,
+    "initial_population": 500,
+    "genome_interpreter": "promotor",
+    "initial_genome_length": 50,
+    "mut_replace_mode": "bitwise",
+    "mut_replace": 0.0005,
+    "mut_factor": 2.5,
+    "mut_unit": 1,
+    "action_map": [32, 5, 0, 5, 5, 17],
+    "death_factor": 0.3
 });
-var world = new World(params);
-// randomly choose spots to seed the world with
-for (var i=0; i<params.initial_population; i++){
-    var x = Math.floor(Math.random()*world.width);
-    world.seed(x);
-}
+// Lindevol C params
+var params_c = new SimulationParams({
+    "genome_interpreter": "block",
+    "initial_genome_length": 400,
+    "mut_replace_mode": "bytewise",
+    "mut_replace": 0.001,
+    "mut_unit": 2,
+    "action_map": [200, 21, 0, 18, 18, 0]
+});
+var simulation = new Simulation(params_c);
+simulation.init_population();
 
 function drawScreen(){
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = "black";
-    world.draw(ctx, cellSize);
+    simulation.world.draw(ctx, cellSize);
     ctx.restore();
 }
 
@@ -92,11 +104,11 @@ function gameLoop(){
 }
 
 function updateStats(){
-    document.querySelector("#stepnum").textContent = world.stepnum;
+    document.querySelector("#stepnum").textContent = simulation.stepnum;
 }
 
 function simStep(){
-    world.step();
+    simulation.step();
     updateCellFocus();
     updateStats();
     drawScreen();

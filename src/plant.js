@@ -2,10 +2,11 @@ import {Cell} from "./cell.js";
 import {NEIGHBOURHOOD} from "./actions.js";
 
 class Plant{
-    constructor(x, world, genome) {
+    constructor(x, world, genome, useInternalState=false) {
         this.world = world;
         this.cells = [new Cell(this, this.world.getX(x), 0)];
         this.genome = genome;
+        this.useInternalState = useInternalState;
     }
 
     getNeighbourhood(cell){
@@ -28,6 +29,10 @@ class Plant{
         return mask;
     }
 
+    getState(cell){
+        return this.getNeighbourhood(cell) | cell.internalState | (Math.pow(2, 15) * ( cell.energised ? 1 : 0));
+    }
+
     grow(){
         this.cells.forEach(function(cell){
             // 50% chance to grow
@@ -41,21 +46,6 @@ class Plant{
                 }
             }
         }, this);
-    }
-
-    action(genomeInterpreter){
-        var rules = genomeInterpreter.interpret(this.genome);
-        this.cells.forEach(function(cell){
-            var mask = this.getNeighbourhood(cell);
-            rules.forEach(function(rule){
-                // execute one action using the first matching rule
-                if (rule.state === mask){
-                    rule.action.execute(cell);
-                    return;
-                }
-            }, this);
-        }, this);
-
     }
 
     /**

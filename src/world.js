@@ -1,40 +1,10 @@
 import {Plant} from "./plant.js";
-import {ByteArray, GenomeInterpreter} from "./genome.js";
-
-class SimulationParams{
-    constructor(params={}){
-        this.world_width = 250;
-        this.world_height = 40;
-        this.initial_population = 250;
-        
-        this.energy_prob = 0.5;
-
-        // death params
-        this.death_factor = 0.2;
-        this.natural_exp = 0;
-        this.energy_exp = -2.5;
-        this.leanover_factor = 0.2;
-
-        // mutations
-        this.mut_replacement = 0.001;
-        this.mut_factor = 1.5;
-        this.initial_mut_exp = 0;
-
-        // divide, flyingseed, localseed, mut+, mut-, statebit
-        this.initial_genome_length = 200;
-        this.action_map = [200, 20, 0, 18, 18, 0];
-
-        Object.assign(this, params);
-    }
-}
+import { Cell } from "./cell.js";
 
 class World {
-    constructor(params=new SimulationParams()){
-        this.params = params;
-        this.width = params.world_width;
-        this.height = params.world_height;
-
-        this.stepnum = 0;
+    constructor(width, height){
+        this.width = width;
+        this.height = height;
 
         this.cells = [];
         // initialise the world lattice to all nulls
@@ -46,36 +16,44 @@ class World {
         }
 
         this.plants = [];
-        this.genomeInterpreter = new GenomeInterpreter(params.action_map);
     }
 
-    seed(x=null, genome=null){
-        // Create a new plant seed on the world floor
-        if (genome===null){
-            genome = ByteArray.random(this.params.initial_genome_length);
-        }
-        if (x===null){
-            // find a random empty space
-            var emptySpaces = [];
-            for(var i=0; i<this.width; i++){
-                if(this.cells[i][0] === null){
-                    emptySpaces.push(i);
-                }
-            }
-            if(emptySpaces.length > 0){
-                x = emptySpaces[Math.floor(Math.random()*(emptySpaces.length-1))];
-            }
-            else{
-                return false;
+    seed(genome){
+        // find a random empty space
+        var emptySpaces = [];
+        for(var i=0; i<this.width; i++){
+            if(this.cells[i][0] === null){
+                emptySpaces.push(i);
             }
         }
+        if(emptySpaces.length === 0){
+            return false;
+        }
+
+        var x = emptySpaces[Math.floor(Math.random()*(emptySpaces.length-1))];
         if (this.cells[x][0] === null){
-            var plant = new Plant(x, this, genome);
-            this.plants.push(plant);
-            this.addCell(plant.cells[0]);
+            this.sowPlant(genome, x);
             return true;
         }
         return false;
+    }
+
+    sowPlant(genome, x){
+        x = this.getX(x);
+        var plant = new Plant(x, this, genome);
+        this.plants.push(plant);
+        this.addCell(plant.cells[0]);
+    }
+
+    /**
+     * Remove plant from world plant list.
+     * Remove all cells from cell grid
+     */
+    killPlant(plant){
+        this.plants.splice(this.plants.indexOf(plant), 1);
+        plant.cells.forEach(function(cell){
+            this.cells[cell.x][cell.y] = null;
+        }, this);
     }
 
     getX(x){
@@ -95,78 +73,11 @@ class World {
         }
     }
 
-    step(){
-        this.stepnum++;
-        this.simulateDeath();
-        this.simulateLight();
-        this.plants.forEach(function(plant){
-            plant.action(this.genomeInterpreter);
-        }, this);
-        this.mutate();
-    }
-
-    mutate(){
-        this.plants.forEach(function(plant){
-            var p_mut = plant.genome.getMutationProbability(this.params);
-            for(var  i=0; i<plant.genome.length; i++){
-                if(Math.random() <= p_mut){
-                    var mbit = Math.pow(2, Math.floor(Math.random()*7));
-                    plant.genome[i] = plant.genome[i] ^ mbit;
-                }
-            }
-        }, this);
-    }
-
-    /**
-     * Use each plant's current death probability to simulate
-     * whether each plant dies on this step
-     */
-    simulateDeath(){
-        var dead_plants = [];
-        this.plants.forEach(function(plant){
-            var deathProb = plant.getDeathProbability(
-                this.params.death_factor,
-                this.params.natural_exp,
-                this.params.energy_exp,
-                this.params.leanover_factor
-            );
-            if (Math.random() <= deathProb.prob){
-                dead_plants.push(plant);
-            }
-        }, this);
-        dead_plants.forEach(function(plant){
-            this.killPlant(plant);
-        }, this);
-    }
-
-    /**
-     * Remove plant from world plant list.
-     * Remove all cells from cell grid
-     */
-    killPlant(plant){
-        this.plants.splice(this.plants.indexOf(plant), 1);
-        plant.cells.forEach(function(cell){
-            this.cells[cell.x][cell.y] = null;
-        }, this);
-    }
-
-    /**
-     * Simulate light. Sunlight traverses from the ceiling of the world
-     * downwards vertically. It is caught by a plant cell with a probability
-     * which causes that cell to be energised.
-     */
-    simulateLight(){
-        for(var x=0; x<this.width; x++){
-            for(var y=0; y<this.height; y++){
-                var cell = this.cells[x][this.height-y-1];
-                if(cell !== null){
-                    if(Math.random() <= this.params.energy_prob){
-                        cell.energised = true;
-                        break;
-                    }
-                }
-            }
-        }
+    getHeightDelta(ctx, cellSize){
+        // find the delat between canvas height and world height in pixels
+        var canvasHeight = ctx.canvas.height;
+        var realHeight = (cellSize * this.height);
+        return canvasHeight - realHeight;
     }
 
     draw(ctx, cellSize){
@@ -174,15 +85,66 @@ class World {
         this.plants.forEach(function(plant){
             plant.cells.forEach(function(cell){
                 var x = cell.x * cellSize;
-                var y = cellSize * (this.height - cell.y);
-                // console.log("Draw " + [x, y]);
-                var colour = cell.energised ? "black" : "grey";
+                
+                var y = cellSize * (this.height - cell.y) + this.getHeightDelta(ctx, cellSize);
+                var colour = this.getCellColour(plant, cell);
                 cell.draw(ctx, x, y - cellSize, cellSize, colour);
+                this.drawCellBorders(ctx, cell, cellSize);
                 numDraws++;
             }, this);
         }, this);
         document.querySelector("#cellnum").textContent = numDraws;
     }
+
+    drawCellBorders(ctx, cell, cellSize){
+        [[0, 1], [1, 0], [0, -1], [-1, 0]].forEach(function(d){
+            var dx = cell.x+d[0], dy=cell.y+d[1];
+
+            if(dx in this.cells){
+
+                var nCell = this.cells[dx][dy];
+                if (nCell instanceof Cell && nCell.plant === cell.plant){
+                    return;
+                }
+            }
+            var px = (cell.x*cellSize), py = cellSize * (this.height - cell.y)+this.getHeightDelta(ctx, cellSize);
+            if (d[0] > 0){
+                px += cellSize;
+            }
+            if(d[1] > 0){
+                py -= cellSize;
+            }
+            ctx.beginPath();
+            ctx.moveTo(px,py);
+            ctx.lineTo(px+cellSize*Math.abs(d[1]),py-cellSize*Math.abs(d[0]));
+            ctx.stroke();
+        }, this);
+
+    }
+
+    getCellColour(plant, cell){
+        var i =plant.cells[0].x % cScale.length;
+        if(cell.energised){
+            return cScale[i];
+        }
+        else{
+            return cEscale[i];
+        }
+    }
 }
 
-export { World, SimulationParams };
+// http://colorbrewer2.org/?type=qualitative&scheme=Set3&n=8
+var cScale = ["rgb(141,211,199)","rgb(255,255,179)","rgb(190,186,218)","rgb(251,128,114)","rgb(128,177,211)","rgb(253,180,98)","rgb(179,222,105)","rgb(252,205,229)"];
+var cEscale = [];
+for(var i=0;i<cScale.length;i++){
+    cEscale.push(shadeRGBColor(cScale[i], -0.3));
+}
+
+function shadeRGBColor(color, percent) {
+    // https://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
+    var f=color.split(","),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=parseInt(f[0].slice(4)),G=parseInt(f[1]),B=parseInt(f[2]);
+    return "rgb("+(Math.round((t-R)*p)+R)+","+(Math.round((t-G)*p)+G)+","+(Math.round((t-B)*p)+B)+")";
+}
+
+
+export { World };
