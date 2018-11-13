@@ -69,7 +69,7 @@ var params_p = new SimulationParams({
     "initial_population": 500,
     "genome_interpreter": "promotor",
     "initial_genome_length": 50,
-    "mut_replace_mode": "bitwise",
+    "mut_replace_mode": "bytwise",
     "mut_replace": 0.0005,
     "mut_factor": 2.5,
     "mut_unit": 1,
@@ -80,10 +80,11 @@ var params_p = new SimulationParams({
 var params_c = new SimulationParams({
     "genome_interpreter": "block",
     "initial_genome_length": 400,
-    "mut_replace_mode": "bytewise",
+    "mut_replace_mode": "bitwise",
     "mut_replace": 0.001,
     "mut_unit": 2,
-    "action_map": [200, 21, 0, 18, 18, 0]
+    "action_map": [200, 21, 0, 18, 18, 0],
+    "death_factor": 0.2
 });
 var simulation = new Simulation(params_c);
 simulation.init_population();

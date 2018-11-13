@@ -54,13 +54,15 @@ class Mutator{
 
     replace(genome){
         var i = this.randomPos(genome);
-        switch(this.replacement_mode){
+        switch(this.pRmode){
         case "bytewise":
             genome[i] = this.randomChar();
             break;
         case "bitwise":
             genome[i] = genome[i] ^ Math.pow(2, Math.floor(Math.random()*7));
             break;
+        default:
+            throw new Error(`Invalid mutation replacement mode: ${this.pRmode}`);
         }
         
     }

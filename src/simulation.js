@@ -101,7 +101,9 @@ class Simulation {
     }
 
     mutate(){
-        var mutator = new Mutator(this.params.mut_factor, this.params.mut_replace, this.params.mut_insert, this.params.mut_delete, 0, this.params.mut_replace_mode, this.params.units);
+        var mutator = new Mutator(this.params.mut_factor, this.params.mut_replace, 
+            this.params.mut_insert, this.params.mut_delete, 
+            0, this.params.mut_replace_mode, this.params.units);
         this.world.plants.forEach(function(plant){
             mutator.mutate(plant.genome);
         }, this);
