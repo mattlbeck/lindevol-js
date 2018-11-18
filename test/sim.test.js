@@ -5,10 +5,9 @@ var expect = require('chai').expect
 import {Simulation, SimulationParams} from "../src/simulation.js";
 import {World} from "../src/world.js";
 import {Cell} from "../src/cell.js";
-import {ByteArray, GenomeInterpreter} from "../src/genome.js";
+import {ByteArray, BlockInterpreter} from "../src/genome.js";
 
 describe("World", function() {
-    var gi = new GenomeInterpreter([220, 15, 0, 10, 10, 0]);
     context("In a 1x1 world", function(){
         var world;
         before("new world", function(){
@@ -38,11 +37,11 @@ describe("World", function() {
         var world;
         var plant;
         before("new sim", function(){
-            sim = new Simulation({
+            sim = new Simulation(new SimulationParams({
                 "world_width": 1, 
                 "world_height": 3,
                 "energy_prob": 1
-            });
+            }));
             world = sim.world;
             world.sowPlant(null, 0); // cell is at (0, 0)
             plant = sim.world.plants[0];
@@ -72,8 +71,8 @@ describe("World", function() {
             context("when plant performs actions", function(){
                 context("when no actions available", function(){
                     before("actions", function(){
-                        plant.genome = new ByteArray([]);
-                        plant.action(gi);
+                        plant.genome = new ByteArray(0);
+                        sim.simulateActions();
                     });
                     it("top most cell is still energised", function(){
                         world.getCell(0, 1).energised.should.be.true;
@@ -84,12 +83,12 @@ describe("World", function() {
                 });
                 context("when actions are available", function(){
                     before("actions", function(){
-                        plant.genome = new ByteArray([2, 6]);
-                        plant.action(gi);
+                        plant.genome = ByteArray.from([2, 6]);
+                        sim.simulateActions();
                     });
                     it("all cells are not energised", function(){
                         plant.cells.forEach(function(cell){
-                            plant.action(gi);
+                            sim.simulateActions();
                             cell.energised.should.be.false;
                         });
                     });
@@ -101,11 +100,16 @@ describe("World", function() {
 });
 
 describe("Plant", function() {
-    var world, plant, cell;
-    var gi = new GenomeInterpreter([220, 15, 0, 10, 10, 0]);
+    var sim, world, plant, cell;
     context("In a 3x2 world", function() {
         beforeEach(function() {
-            world = new World(3,2);
+            sim = new Simulation(new SimulationParams({
+                "world_width": 3, 
+                "world_height": 2,
+                "genome_interpreter": "block",
+                "action_map": [220, 15, 0, 10, 10, 0]
+            }));
+            world = sim.world;
             world.sowPlant(null, 1); // cell is at (1, 0)
             plant = world.plants[0];
             cell = plant.cells[0];
@@ -150,9 +154,9 @@ describe("Plant", function() {
 
         context("Given a gene for dividing vertically", function(){
             beforeEach("Add gene to plant and execute action", function(){
-                plant.genome = new ByteArray([0, 6]);
+                plant.genome = ByteArray.from([0, 6]);
                 plant.cells[0].energised = true;
-                plant.action(gi);
+                sim.simulateActions();
             });
             it("the plant grows directly up", function(){
                 plant.getNeighbourhood(cell).should.equal(Math.pow(2, 6));
@@ -160,9 +164,9 @@ describe("Plant", function() {
         });
         context("Given a gene for flying seed", function(){
             beforeEach("Add gene to plant and execute action", function(){
-                plant.genome = new ByteArray([0, 221]);
+                plant.genome = ByteArray.from([0, 220]);
                 plant.cells[0].energised = true;
-                plant.action(gi);
+                sim.simulateActions();
             });
             it("there are now two plants", function(){
                 world.plants.length.should.equal(2);

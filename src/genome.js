@@ -8,6 +8,14 @@ class ByteArray extends Array{
         this.mut_exp = initial_mut_exp;
     }
 
+    static from(arr){
+        var ba = new ByteArray(arr.length);
+        for(var i=0; i<ba.length;i++){
+            ba[i] = arr[i];
+        }
+        return ba;
+    }
+
     static random(length){
         var ba = new ByteArray(length);
         for(var i=0; i<ba.length;i++){
