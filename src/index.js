@@ -68,15 +68,15 @@ var params_p = new SimulationParams({
     "world_width": 500,
     "initial_population": 500,
     "genome_interpreter": "promotor",
-    "initial_genome_length": 200,
+    "initial_genome_length": 50,
     "mut_replace_mode": "bytewise",
-    "mut_replace": 0.001,
-    "mut_insert": 0.001,
-    "mut_delete": 0.001,
+    "mut_replace": 0.002,
+    "mut_insert": 0.0004,
+    "mut_delete": 0.0004,
     "mut_factor": 1.5,
-    "mut_unit": 1,
-    "action_map": [32, 5, 0, 5, 5, 17],
-    "death_factor": 0.32,
+    "action_map": [32, 8, 0, 4, 4, 16],
+    "death_factor": 0.33,
+    "leanover_factor": 0.15,
     "energy_exp": -2.5
 });
 
@@ -86,7 +86,6 @@ var params_c = new SimulationParams({
     "initial_genome_length": 400,
     "mut_replace_mode": "bitwise",
     "mut_replace": 0.001,
-    "mut_unit": 2,
     "action_map": [200, 21, 0, 18, 18, 0],
     "death_factor": 0.2
 });

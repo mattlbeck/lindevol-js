@@ -70,14 +70,14 @@ class Mutator{
 
     insert(genome){
         var i = this.randomPos(genome);
-        for(var n; n<this.units; n++){
+        for(var n=0; n<this.units; n++){
             genome.splice(i, 0, this.randomChar());
         }
     }
 
     delete(genome){
         var i = this.randomPos(genome);
-        for(var n; n<this.units; n++){
+        for(var n=0; n<this.units; n++){
             genome.splice(i, 1);
         }
     }
@@ -87,7 +87,7 @@ class Mutator{
     }
 
     randomPos(genome){
-        return randomInt(0, genome.length);
+        return randomInt(0, genome.length-1);
     }
 }
 
@@ -171,7 +171,6 @@ class PromotorInterpreter extends GenomeInterpreter{
             // take information from operators to create state mask
             var mask = 0;
             var eqMask = 0; // specified which bits contribute to the state mask
-            var mask = 0;
             for(var i=1; i<gene.length-1; i++) {
                 // 4 least sig bits determine the mask index
                 var maskBit = gene[i] & (Math.pow(2, 4) - 1);

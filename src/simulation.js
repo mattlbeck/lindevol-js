@@ -47,6 +47,11 @@ class Simulation {
 
         this.world = new World(this.params.world_width, this.params.world_height);
         this.genomeInterpreter = this.getInterpreter();
+        this.mut_units = 1;
+        // ensure mutation units is compatible with the interpreter type
+        if(this.genomeInterpreter instanceof BlockInterpreter){
+            this.mut_units = 2;
+        }
         this.stepnum = 0;
     }
 
@@ -112,7 +117,7 @@ class Simulation {
     mutate(){
         var mutator = new Mutator(this.params.mut_factor, this.params.mut_replace, 
             this.params.mut_insert, this.params.mut_delete, 
-            0, this.params.mut_replace_mode, this.params.units);
+            0, this.params.mut_replace_mode, this.mut_units);
         this.world.plants.forEach(function(plant){
             mutator.mutate(plant.genome);
         }, this);

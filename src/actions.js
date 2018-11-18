@@ -109,6 +109,10 @@ class StateBitN extends Action{
         // & with 00001111 to mask out least sig bits
         return this.code & 15;
     }
+
+    toString(){
+        return `StateBit ${this.getNthBit()}`;
+    }
 }
 
 class ActionMap {
@@ -126,8 +130,9 @@ class ActionMap {
                 return new this.actions[i](actionCode);
             }
         }
-        throw `Action code ${actionCode} does not map to an action`
+        throw `Action code ${actionCode} does not map to an action`;
     }
+
 }
 
 export {Divide, MutatePlus, MutateMinus, LocalSeed, FlyingSeed, ActionMap, NEIGHBOURHOOD};
