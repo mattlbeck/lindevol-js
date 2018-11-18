@@ -1,3 +1,4 @@
+import {randomInt} from "./random.js";
 import {Plant} from "./plant.js";
 import { Cell } from "./cell.js";
 
@@ -30,7 +31,7 @@ class World {
             return false;
         }
 
-        var x = emptySpaces[Math.floor(Math.random()*(emptySpaces.length-1))];
+        var x = emptySpaces[randomInt(0, emptySpaces.length-1)];
         if (this.cells[x][0] === null){
             this.sowPlant(genome, x);
             return true;

@@ -1,8 +1,11 @@
+import {seedRandom, randomProb} from "./random.js";
 import {World} from "./world.js";
 import {ByteArray, BlockInterpreter, PromotorInterpreter, Mutator} from "./genome.js";
 
 class SimulationParams{
     constructor(params={}){
+        this.random_seed = 1;
+
         this.world_width = 250;
         this.world_height = 40;
         this.initial_population = 250;
@@ -36,6 +39,12 @@ class SimulationParams{
 class Simulation {
     constructor(params) {
         this.params = params;
+
+        // Seed all future calls to random
+        // this makes out tests reproducible given the same seed is used
+        // in future input parameters
+        seedRandom(this.params.random_seed);
+
         this.world = new World(this.params.world_width, this.params.world_height);
         this.genomeInterpreter = this.getInterpreter();
         this.stepnum = 0;
@@ -122,7 +131,7 @@ class Simulation {
                 this.params.energy_exp,
                 this.params.leanover_factor
             );
-            if (Math.random() <= deathProb.prob){
+            if (randomProb(deathProb.prob)){
                 dead_plants.push(plant);
             }
         }, this);
@@ -141,7 +150,7 @@ class Simulation {
             for(var y=0; y<this.world.height; y++){
                 var cell = this.world.cells[x][this.world.height-y-1];
                 if(cell !== null){
-                    if(Math.random() <= this.params.energy_prob){
+                    if(randomProb(this.params.energy_prob)){
                         cell.energised = true;
                         break;
                     }

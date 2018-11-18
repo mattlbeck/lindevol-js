@@ -247,7 +247,7 @@ class ByteArray extends Uint8Array{
     static random(length){
         var ba = new ByteArray(length)
         for(var i=0; i<ba.length;i++){
-            ba[i] = Math.floor(Math.random()*255)
+            ba[i] = randomInt(0, 255);
         }
         return ba
     }

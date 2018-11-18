@@ -1,3 +1,4 @@
+import {randomInt, randomProb} from "./random.js";
 import {Cell} from "./cell.js";
 import {NEIGHBOURHOOD} from "./actions.js";
 
@@ -36,10 +37,10 @@ class Plant{
     grow(){
         this.cells.forEach(function(cell){
             // 50% chance to grow
-            if(Math.random() > 0.8){
+            if(randomProb(0.8)){
                 var spaces = this.getGrowDirection(cell);
                 if(spaces.length > 0){
-                    var direction = spaces[Math.floor(Math.random()*spaces.length)];
+                    var direction = spaces[randomInt(0, spaces.length)];
                     if (direction !== null){
                         this.growFromCell(cell, direction);
                     }
@@ -66,12 +67,15 @@ class Plant{
             }
             // this plant will kill the other
             // with a probability...
-            if(Math.random() > space.plant.getKillProbability()){
+            if(randomProb(space.plant.getKillProbability())){
+                // attack succeeded. Kill competitor and continue with growth
+                this.world.killPlant(space.plant);
+            }
+            else {
                 // attack failed
                 return;
             }
-            // attack succeeded
-            this.world.killPlant(space.plant);
+            
         }
         // grow cell in to empty space
         var new_cell = new Cell(this, this.world.getX(x), y);

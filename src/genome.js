@@ -1,3 +1,4 @@
+import {randomInt, randomProb} from "./random.js";
 import {ActionMap} from "./actions.js";
 
 class ByteArray extends Array{
@@ -10,7 +11,7 @@ class ByteArray extends Array{
     static random(length){
         var ba = new ByteArray(length);
         for(var i=0; i<ba.length;i++){
-            ba[i] = Math.floor(Math.random()*255);
+            ba[i] = randomInt(0, 255);
         }
         return ba;
     }
@@ -49,7 +50,7 @@ class Mutator{
     }
 
     mProb(p, exp){
-        return Math.random() < p * Math.pow( this.prob, exp);
+        return randomProb(p * Math.pow( this.prob, exp));
     }
 
     replace(genome){
@@ -59,7 +60,7 @@ class Mutator{
             genome[i] = this.randomChar();
             break;
         case "bitwise":
-            genome[i] = genome[i] ^ Math.pow(2, Math.floor(Math.random()*7));
+            genome[i] = genome[i] ^ Math.pow(2, randomInt(0, 7));
             break;
         default:
             throw new Error(`Invalid mutation replacement mode: ${this.pRmode}`);
@@ -82,11 +83,11 @@ class Mutator{
     }
 
     randomChar(){
-        return Math.floor(Math.random()*255);
+        return randomInt(0, 255);
     }
 
     randomPos(genome){
-        return Math.floor(Math.random()*genome.length);
+        return randomInt(0, genome.length);
     }
 }
 
