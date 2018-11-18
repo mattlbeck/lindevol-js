@@ -19,24 +19,51 @@ class World {
         this.plants = [];
     }
 
-    seed(genome){
-        // find a random empty space
+    /**
+     * @returns array of x positions at y=0 where no cell exists
+     */
+    getFloorSpace(){
         var emptySpaces = [];
         for(var i=0; i<this.width; i++){
             if(this.cells[i][0] === null){
                 emptySpaces.push(i);
             }
         }
+        return emptySpaces;
+    }
+
+    /**
+     * Strategies for sowing a seed on the world floor
+     * @param {*} genome the genome used by the new seed
+     * @param {*} nearX if not null, try to sow a seed as close
+     * as possible to this location
+     * 
+     * @return true if a seed was succesfully planted, false if
+     * there was no space to sow a seed.
+     */
+    seed(genome, nearX){
+        // find a random empty space
+        var emptySpaces = this.getFloorSpace();
         if(emptySpaces.length === 0){
             return false;
         }
 
-        var x = emptySpaces[randomInt(0, emptySpaces.length-1)];
-        if (this.cells[x][0] === null){
-            this.sowPlant(genome, x);
-            return true;
+        if(nearX !== undefined){
+            var nearestX = null;
+            var nearest_diff = this.width;
+            emptySpaces.forEach(function(xpos){
+                var diff = Math.abs(nearX-xpos);
+                if(diff < nearest_diff){
+                    nearest_diff = diff;
+                    nearestX = xpos;
+                }
+            });
+            this.sowPlant(genome, nearestX);
         }
-        return false;
+
+        var x = emptySpaces[randomInt(0, emptySpaces.length-1)];
+        this.sowPlant(genome, x);
+        return true;
     }
 
     sowPlant(genome, x){

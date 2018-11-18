@@ -74,8 +74,8 @@ var params_p = new SimulationParams({
     "mut_insert": 0.0004,
     "mut_delete": 0.0004,
     "mut_factor": 1.5,
-    "action_map": [32, 8, 0, 4, 4, 16],
-    "death_factor": 0.33,
+    "action_map": [32, 4, 4, 4, 4, 16],
+    "death_factor": 0.35,
     "leanover_factor": 0.15,
     "energy_exp": -2.5
 });

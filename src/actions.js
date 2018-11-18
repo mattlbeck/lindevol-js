@@ -89,7 +89,8 @@ class FlyingSeed extends Action{
 
 class LocalSeed extends Action{
     doAction(cell){
-        // cell.plant.seed
+        super.doAction(cell);
+        return cell.plant.world.seed(cell.plant.genome.copy(), cell.x);
     }
 
     toString(){
