@@ -1,5 +1,6 @@
 
 import {Simulation, SimulationParams} from "./simulation.js";
+import {SimData} from "./simdata.js";
 import { Cell } from "./cell.js";
 import $ from "jquery";
 
@@ -75,7 +76,7 @@ var params_p = new SimulationParams({
     "mut_delete": 0.0004,
     "mut_factor": 1.5,
     "action_map": [32, 4, 4, 4, 4, 16],
-    "death_factor": 0.35,
+    "death_factor": 0.32,
     "leanover_factor": 0.15,
     "energy_exp": -2.5
 });
@@ -91,6 +92,7 @@ var params_c = new SimulationParams({
 });
 
 var simulation = new Simulation(params_p);
+var data = new SimData(simulation);
 simulation.init_population();
 
 function drawScreen(){
@@ -114,6 +116,8 @@ function updateStats(){
 
 function simStep(){
     simulation.step();
+    data.recordStep();
+    console.log(data.data);
     updateCellFocus();
     updateStats();
     drawScreen();

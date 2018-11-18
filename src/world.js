@@ -59,9 +59,13 @@ class World {
                 }
             });
             this.sowPlant(genome, nearestX);
+            return true;
         }
 
         var x = emptySpaces[randomInt(0, emptySpaces.length-1)];
+        if (this.cells[x][0] !== null){
+            throw new Error("Space is taken");
+        }
         this.sowPlant(genome, x);
         return true;
     }
