@@ -68,14 +68,18 @@ var params_p = new SimulationParams({
     "world_width": 500,
     "initial_population": 500,
     "genome_interpreter": "promotor",
-    "initial_genome_length": 50,
-    "mut_replace_mode": "bytwise",
-    "mut_replace": 0.0005,
-    "mut_factor": 2.5,
+    "initial_genome_length": 200,
+    "mut_replace_mode": "bytewise",
+    "mut_replace": 0.001,
+    "mut_insert": 0.001,
+    "mut_delete": 0.001,
+    "mut_factor": 1.5,
     "mut_unit": 1,
     "action_map": [32, 5, 0, 5, 5, 17],
-    "death_factor": 0.3
+    "death_factor": 0.32,
+    "energy_exp": -2.5
 });
+
 // Lindevol C params
 var params_c = new SimulationParams({
     "genome_interpreter": "block",
@@ -86,7 +90,8 @@ var params_c = new SimulationParams({
     "action_map": [200, 21, 0, 18, 18, 0],
     "death_factor": 0.2
 });
-var simulation = new Simulation(params_c);
+
+var simulation = new Simulation(params_p);
 simulation.init_population();
 
 function drawScreen(){
