@@ -2,6 +2,8 @@
 <html>
     <head>
         <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
         <title>LindEvol</title>
     </head>
     <body>
@@ -11,10 +13,18 @@
         <div class="control">
             <input type="button" id="step" value="step" />
             <input type="button" id="run" value="run" />
+            <input type="button" id="reload" value="reload" />
             <p id="stepnum">0</p>
             <p id="cellnum">0</p>
             <div id="cellinfo"></div>
         </div>
-        <script src="main.bundle.js"></script> 
+
+        <div class="input-group">
+            <div class="input-group-prepend">
+            <span class="input-group-text">Parameters</span>
+            </div>
+            <textarea class="form-control" id="params" aria-label="Parameters">bam</textarea>
+        </div>
+        <script src="main.bundle.js"></script>
     </body>
 </html>

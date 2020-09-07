@@ -1,4 +1,4 @@
-
+import 'bootstrap';
 import {Simulation, SimulationParams} from "./simulation.js";
 import {SimData} from "./simdata.js";
 import { Cell } from "./cell.js";
@@ -20,6 +20,9 @@ $("#run").on("click", function (){
         gameLoop();
     }
 });
+$("#reload").on("click", function(){
+    reloadSim();
+})
 
 var selectedCell = null;
 
@@ -49,11 +52,11 @@ function updateCellFocus(){
 }
 
 canvas.addEventListener("click", function(event){
-    var x = event.pageX-canvas.offsetLeft+canvasOffset, 
+    var x = event.pageX-canvas.offsetLeft+canvasOffset,
         y = (canvas.height - (event.pageY-canvas.offsetTop))+canvasOffset;
     var cellx = Math.floor(x / cellSize),
         celly = Math.floor(y / cellSize);
-   
+
     var cell = simulation.world.getCell(cellx, celly);
     if (cell instanceof Cell){
         selectedCell = [cellx, celly];
@@ -91,9 +94,19 @@ var params_c = new SimulationParams({
     "death_factor": 0.2
 });
 
-var simulation = new Simulation(params_p);
-var data = new SimData(simulation);
-simulation.init_population();
+
+$( "textarea#params" ).val(JSON.stringify(params_p, null, 4));
+var simulation;
+var data;
+function reloadSim(){
+    var params = JSON.parse($("#params").val());
+    var sim_params = new SimulationParams(params);
+    simulation = new Simulation(sim_params);
+    data = new SimData(simulation);
+    simulation.init_population();
+    drawScreen();
+}
+
 
 function drawScreen(){
     ctx.save();
@@ -117,11 +130,10 @@ function updateStats(){
 function simStep(){
     simulation.step();
     data.recordStep();
-    console.log(data.data);
     updateCellFocus();
     updateStats();
     drawScreen();
 }
 
+reloadSim()
 gameLoop();
-

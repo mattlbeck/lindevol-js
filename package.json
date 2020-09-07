@@ -11,7 +11,10 @@
   "author": "Matthew Lloyd Beckers",
   "license": "ISC",
   "dependencies": {
+    "@popperjs/core": "^2.4.4",
+    "bootstrap": "^4.5.2",
     "jquery": "^3.3.1",
+    "popper.js": "^1.16.1",
     "seedrandom": "^2.4.4",
     "stats-lite": "^2.2.0"
   },
