@@ -94,8 +94,11 @@ var params_c = new SimulationParams({
     "death_factor": 0.2
 });
 
-
+// Add a params template with defaults to the params textarea
 $( "textarea#params" ).val(JSON.stringify(params_p, null, 4));
+// trigger an auto-resize
+$( "textarea#params" ).trigger("input")
+
 var simulation;
 var data;
 function reloadSim(){
