@@ -1,5 +1,12 @@
 export const paramInfo = [
     {
+        id: "record_interval",
+        label: "Record Interval",
+        type: "number",
+        attrs: { step: "1", min: "1" },
+        description: "How often (in simulation steps) data metrics are recorded and charts are updated."
+    },
+    {
         id: "random_seed",
         label: "Random Seed",
         type: "number",

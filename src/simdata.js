@@ -8,6 +8,30 @@ class SimData{
         this.collectors = [
             new Collector("population", AsIs, function(sim){
                 return sim.world.plants.length;
+            }),
+            new Collector("total_cells", AsIs, function(sim){
+                return sim.world.plants.reduce((sum, p) => sum + p.cells.length, 0);
+            }),
+            new Collector("energised_cells", AsIs, function(sim){
+                return sim.world.plants.reduce((sum, p) => sum + p.cells.filter(c => c.energised).length, 0);
+            }),
+            new Collector("plant_size_", Summary, function(sim){
+                if (sim.world.plants.length === 0) return [0];
+                return sim.world.plants.map(p => p.cells.length);
+            }),
+            new Collector("genome_size_", Summary, function(sim){
+                if (sim.world.plants.length === 0) return [0];
+                return sim.world.plants.map(p => p.genome.length);
+            }),
+            new Collector("mut_exp_", Summary, function(sim){
+                if (sim.world.plants.length === 0) return [0];
+                return sim.world.plants.map(p => p.genome.mut_exp);
+            }),
+            new Collector("plant_height_", Summary, function(sim){
+                if (sim.world.plants.length === 0) return [0];
+                return sim.world.plants.map(p => {
+                    return Math.max(...p.cells.map(c => c.y));
+                });
             })
         ];
     }

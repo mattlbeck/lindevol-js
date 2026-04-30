@@ -5,6 +5,7 @@ import {ByteArray, BlockInterpreter, PromotorInterpreter, Mutator} from "./genom
 class SimulationParams{
     constructor(params={}){
         this.random_seed = 1;
+        this.record_interval = 10;
 
         this.world_width = 250;
         this.world_height = 40;

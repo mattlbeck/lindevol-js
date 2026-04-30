@@ -3,11 +3,90 @@ import {Simulation, SimulationParams} from "./simulation.js";
 import {SimData} from "./simdata.js";
 import { Cell } from "./cell.js";
 import $ from "jquery";
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
+Chart.defaults.color = '#9ba892';
+Chart.defaults.borderColor = 'rgba(181, 204, 168, 0.15)';
 
 var canvas = document.querySelector("#mainbox");
 var ctx = canvas.getContext("2d");
 var canvasOffset = 0.5;
 ctx.translate(canvasOffset, canvasOffset);
+
+let charts = {};
+
+function initCharts() {
+    Object.values(charts).forEach(c => c.destroy());
+    
+    const commonOptions = {
+        responsive: true,
+        animation: false,
+        elements: { point: { radius: 0 }, line: { borderWidth: 2 } },
+        scales: { x: { display: true }, y: { display: true } },
+        plugins: { legend: { display: true, position: 'top' } }
+    };
+
+    charts.population = new Chart(document.getElementById('chart-population'), {
+        type: 'line',
+        data: { labels: [], datasets: [
+            { label: 'Plants', data: [], borderColor: '#8dc63f', backgroundColor: 'rgba(141, 198, 63, 0.1)' },
+            { label: 'Total Cells', data: [], borderColor: '#a78bfa', backgroundColor: 'rgba(167, 139, 250, 0.1)' },
+            { label: 'Energised Cells', data: [], borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.1)' }
+        ]},
+        options: commonOptions
+    });
+
+    charts.plantSize = new Chart(document.getElementById('chart-plant-size'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Mean Plant Size', data: [], borderColor: '#38bdf8' }]},
+        options: commonOptions
+    });
+
+    charts.plantHeight = new Chart(document.getElementById('chart-plant-height'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Mean Plant Height', data: [], borderColor: '#fb923c' }]},
+        options: commonOptions
+    });
+
+    charts.genomeSize = new Chart(document.getElementById('chart-genome-size'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Mean Genome Size', data: [], borderColor: '#f472b6' }]},
+        options: commonOptions
+    });
+
+    charts.mutExp = new Chart(document.getElementById('chart-mut-exp'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Mean Mut Exp', data: [], borderColor: '#c084fc' }]},
+        options: commonOptions
+    });
+}
+
+function updateCharts() {
+    const steps = data.data["stepnum"];
+    
+    charts.population.data.labels = steps;
+    charts.population.data.datasets[0].data = data.data["population"];
+    charts.population.data.datasets[1].data = data.data["total_cells"];
+    charts.population.data.datasets[2].data = data.data["energised_cells"];
+    charts.population.update();
+
+    charts.plantSize.data.labels = steps;
+    charts.plantSize.data.datasets[0].data = data.data["plant_size_mean"];
+    charts.plantSize.update();
+
+    charts.plantHeight.data.labels = steps;
+    charts.plantHeight.data.datasets[0].data = data.data["plant_height_mean"];
+    charts.plantHeight.update();
+
+    charts.genomeSize.data.labels = steps;
+    charts.genomeSize.data.datasets[0].data = data.data["genome_size_mean"];
+    charts.genomeSize.update();
+
+    charts.mutExp.data.labels = steps;
+    charts.mutExp.data.datasets[0].data = data.data["mut_exp_mean"];
+    charts.mutExp.update();
+}
 
 // control
 document.querySelector("#step").addEventListener("click", function (){
@@ -24,7 +103,12 @@ $("#run").on("click", function (){
 });
 $("#reload").on("click", function(){
     reloadSim();
-})
+});
+
+$("#toggle-params").on("click", function() {
+    $("#params-content").toggleClass("hidden");
+    $(this).find(".toggle-icon").toggleClass("rotated");
+});
 
 var selectedCell = null;
 
@@ -237,6 +321,8 @@ function reloadSim(){
     canvas.height = simulation.world.height * cellSize;
     ctx.translate(canvasOffset, canvasOffset);
 
+    initCharts();
+
     drawScreen();
 }
 
@@ -262,11 +348,15 @@ function updateStats(){
 
 function simStep(){
     simulation.step();
-    data.recordStep();
+    
+    if (simulation.stepnum % simulation.params.record_interval === 0 || simulation.stepnum === 1) {
+        data.recordStep();
+        updateCharts();
+    }
+    
     updateCellFocus();
     updateStats();
     drawScreen();
 }
 
-reloadSim()
-gameLoop();
+reloadSim();
