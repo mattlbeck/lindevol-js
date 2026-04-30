@@ -1,46 +1,220 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-        <title>LindEvol</title>
-    </head>
-    <body>
-        <div class="sim">
-            <canvas id="mainbox" width="2500" height="400"></canvas>
-        </div>
-        <div class="control">
-            <input type="button" id="step" value="step" />
-            <input type="button" id="run" value="run" />
-            <input type="button" id="reload" value="reload" />
-            <p id="stepnum">0</p>
-            <p id="cellnum">0</p>
-            <div id="cellinfo"></div>
-        </div>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>LindEvol Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        :root {
+            --bg-color: #1a1e16;
+            --glass-bg: rgba(43, 56, 38, 0.7);
+            --glass-border: rgba(181, 204, 168, 0.15);
+            --text-main: #e8f0e1;
+            --text-muted: #9ba892;
+            --accent: #5e8a3f;
+            --accent-hover: #4a6e31;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            background: linear-gradient(90deg, #8dc63f, #c6e070);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .control {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-primary { background: var(--accent); }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .stats-badge {
+            background: rgba(0,0,0,0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            border: 1px solid var(--glass-border);
+        }
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .sim-panel {
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+        canvas {
+            background: #111510;
+            border-radius: 8px;
+            display: block;
+            image-rendering: pixelated;
+        }
+        .cell-info {
+            margin-top: 16px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #c6e070;
+            min-height: 40px;
+        }
+        .cell-info p {
+            margin-bottom: 4px;
+        }
+        .params-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 1024px) {
+            .params-dashboard { grid-template-columns: 1fr; }
+        }
+        .json-panel h3, .widgets-panel h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #cbd5e1;
+        }
+        .code-editor {
+            background: #111510 !important;
+            color: #a1d65d !important;
+            font-family: 'Consolas', monospace;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: 8px;
+            height: 600px !important;
+            resize: vertical;
+        }
+        .code-editor:focus {
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+        .widgets-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .form-group { margin-bottom: 0; }
+        .form-group label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .form-control, .custom-select {
+            background: rgba(0,0,0,0.2) !important;
+            border: 1px solid var(--glass-border) !important;
+            color: var(--text-main) !important;
+            border-radius: 6px;
+        }
+        .form-control:focus, .custom-select:focus {
+            box-shadow: 0 0 0 2px var(--accent);
+            border-color: transparent !important;
+        }
+        .action-map-grid {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: rgba(0,0,0,0.2);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+        }
+        .action-map-grid > label {
+            grid-column: span 3;
+            color: #c6e070;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>LindEvol Artificial Ecology</h1>
+            <div class="control">
+                <button class="btn btn-primary" id="step">Step</button>
+                <button class="btn btn-success" id="run">Run</button>
+                <button class="btn btn-warning" id="reload">Apply & Reload</button>
+                <span class="stats-badge">Step: <span id="stepnum">0</span> | Cells: <span id="cellnum">0</span></span>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="sim-panel glass-panel">
+                <canvas id="mainbox" width="2500" height="400"></canvas>
+                <div id="cellinfo" class="cell-info">Click a cell to see info...</div>
+            </div>
 
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <a class="nav-link active" id="data-tab" data-toggle="tab" href="#data" role="tab" aria-controls="data" aria-selected="true">data</a>
-            </li>
-            <li class="nav-item" role="presentation">
-              <a class="nav-link" id="params-tab" data-toggle="tab" href="#param-widgets" role="tab" aria-controls="param-widgets" aria-selected="false">params</a>
-            </li>
-            <li class="nav-item" role="presentation">
-              <a class="nav-link" id="export-tab" data-toggle="tab" href="#export" role="tab" aria-controls="export" aria-selected="false">export</a>
-            </li>
-          </ul>
-          <div class="tab-content" id="myTabContent">
-            <div class="tab-pane fade show active" id="export" role="tabpanel" aria-labelledby="export-tab">
-                <div class="input-group">
-                    <textarea class="form-control" id="params" aria-label="Parameters" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"'></textarea>
+            <div class="params-dashboard">
+                <div class="json-panel glass-panel">
+                    <h3>JSON Configuration</h3>
+                    <textarea id="params" class="form-control code-editor"></textarea>
+                </div>
+                
+                <div class="widgets-panel glass-panel">
+                    <h3>Parameter Controls</h3>
+                    <form id="params-form" class="widgets-grid">
+                        <div class="form-group"><label>Random Seed</label><input type="number" id="w_random_seed" class="form-control widget-input"></div>
+                        <div class="form-group"><label>World Width</label><input type="number" id="w_world_width" class="form-control widget-input"></div>
+                        <div class="form-group"><label>World Height</label><input type="number" id="w_world_height" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Initial Population</label><input type="number" id="w_initial_population" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Energy Prob</label><input type="number" step="0.01" id="w_energy_prob" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Death Factor</label><input type="number" step="0.01" id="w_death_factor" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Natural Exp</label><input type="number" step="0.1" id="w_natural_exp" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Energy Exp</label><input type="number" step="0.1" id="w_energy_exp" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Leanover Factor</label><input type="number" step="0.01" id="w_leanover_factor" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Mut Replace Mode</label><select id="w_mut_replace_mode" class="custom-select widget-input"><option value="bytewise">bytewise</option><option value="bitwise">bitwise</option></select></div>
+                        <div class="form-group"><label>Mut Replace</label><input type="number" step="0.0001" id="w_mut_replace" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Mut Insert</label><input type="number" step="0.0001" id="w_mut_insert" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Mut Delete</label><input type="number" step="0.0001" id="w_mut_delete" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Mut Factor</label><input type="number" step="0.1" id="w_mut_factor" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Initial Mut Exp</label><input type="number" step="0.1" id="w_initial_mut_exp" class="form-control widget-input"></div>
+                        <div class="form-group"><label>Genome Interpreter</label><select id="w_genome_interpreter" class="custom-select widget-input"><option value="block">block</option><option value="promotor">promotor</option></select></div>
+                        <div class="form-group"><label>Initial Genome Length</label><input type="number" id="w_initial_genome_length" class="form-control widget-input"></div>
+                        
+                        <div class="action-map-grid">
+                            <label>Action Map Probabilities</label>
+                            <div class="form-group"><label>Divide</label><input type="number" id="w_am_0" class="form-control widget-input action-map-input"></div>
+                            <div class="form-group"><label>Flying Seed</label><input type="number" id="w_am_1" class="form-control widget-input action-map-input"></div>
+                            <div class="form-group"><label>Local Seed</label><input type="number" id="w_am_2" class="form-control widget-input action-map-input"></div>
+                            <div class="form-group"><label>Mut +</label><input type="number" id="w_am_3" class="form-control widget-input action-map-input"></div>
+                            <div class="form-group"><label>Mut -</label><input type="number" id="w_am_4" class="form-control widget-input action-map-input"></div>
+                            <div class="form-group"><label>State Bit</label><input type="number" id="w_am_5" class="form-control widget-input action-map-input"></div>
+                        </div>
+                    </form>
                 </div>
             </div>
-            <div class="tab-pane fade" id="param-widgets" role="tabpanel" aria-labelledby="params-tab">Coming soon</div>
-            <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">Coming soon</div>
-          </div>
-
-
-        <script src="main.bundle.js"></script>
-    </body>
+        </div>
+    </div>
+    <script src="main.bundle.js"></script>
+</body>
 </html>

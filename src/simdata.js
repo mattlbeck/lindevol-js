@@ -1,4 +1,4 @@
-import {stats} from "stats-lite";
+import * as stats from "stats-lite";
 
 class SimData{
 
