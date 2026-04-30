@@ -1,24 +1,47 @@
 import 'bootstrap';
-import {Simulation, SimulationParams} from "./simulation.js";
-import {SimData} from "./simdata.js";
-import { Cell } from "./cell.js";
 import $ from "jquery";
 import { Chart, registerables } from 'chart.js';
+import { paramInfo } from "./paramInfo.js";
+import { SimulationParams } from "./simulation.js";
 
 Chart.register(...registerables);
 Chart.defaults.color = '#9ba892';
 Chart.defaults.borderColor = 'rgba(181, 204, 168, 0.15)';
 
-var canvas = document.querySelector("#mainbox");
-var ctx = canvas.getContext("2d");
-var canvasOffset = 0.5;
-ctx.translate(canvasOffset, canvasOffset);
+// ── Canvas setup ─────────────────────────────────────────────────────────────
+const canvas = document.querySelector("#mainbox");
+const ctx = canvas.getContext("2d");
+const cellSize = 8;
 
+// ── Web Worker ────────────────────────────────────────────────────────────────
+const simWorker = new Worker(new URL('./simulation.worker.js', import.meta.url), { type: 'module' });
+
+simWorker.onmessage = function(event) {
+    const msg = event.data;
+    switch (msg.type) {
+    case "frame":
+        renderFrame(msg);
+        break;
+    case "stats":
+        updateCharts(msg.data, msg.stepnum);
+        updateStats(msg.stepnum);
+        break;
+    case "cellInfo":
+        renderCellInfo(msg);
+        break;
+    }
+};
+
+simWorker.onerror = function(e) {
+    console.error("Worker error:", e);
+};
+
+// ── Charts ────────────────────────────────────────────────────────────────────
 let charts = {};
 
 function initCharts() {
     Object.values(charts).forEach(c => c.destroy());
-    
+
     const commonOptions = {
         responsive: true,
         animation: false,
@@ -62,49 +85,99 @@ function initCharts() {
     });
 }
 
-function updateCharts() {
-    const steps = data.data["stepnum"];
-    
+function updateCharts(data, stepnum) {
+    const steps = data["stepnum"];
+
     charts.population.data.labels = steps;
-    charts.population.data.datasets[0].data = data.data["population"];
-    charts.population.data.datasets[1].data = data.data["total_cells"];
-    charts.population.data.datasets[2].data = data.data["energised_cells"];
+    charts.population.data.datasets[0].data = data["population"];
+    charts.population.data.datasets[1].data = data["total_cells"];
+    charts.population.data.datasets[2].data = data["energised_cells"];
     charts.population.update();
 
     charts.plantSize.data.labels = steps;
-    charts.plantSize.data.datasets[0].data = data.data["plant_size_mean"];
+    charts.plantSize.data.datasets[0].data = data["plant_size_mean"];
     charts.plantSize.update();
 
     charts.plantHeight.data.labels = steps;
-    charts.plantHeight.data.datasets[0].data = data.data["plant_height_mean"];
+    charts.plantHeight.data.datasets[0].data = data["plant_height_mean"];
     charts.plantHeight.update();
 
     charts.genomeSize.data.labels = steps;
-    charts.genomeSize.data.datasets[0].data = data.data["genome_size_mean"];
+    charts.genomeSize.data.datasets[0].data = data["genome_size_mean"];
     charts.genomeSize.update();
 
     charts.mutExp.data.labels = steps;
-    charts.mutExp.data.datasets[0].data = data.data["mut_exp_mean"];
+    charts.mutExp.data.datasets[0].data = data["mut_exp_mean"];
     charts.mutExp.update();
 }
 
-// control
-document.querySelector("#step").addEventListener("click", function (){
-    simStep();
-    updateCellFocus();
-    updateStats();
-    drawScreen();
+// ── Rendering ─────────────────────────────────────────────────────────────────
+function renderFrame(msg) {
+    const { buffer, width, height, cellCount, stepnum } = msg;
+    canvas.width = width;
+    canvas.height = height;
+
+    const imageData = new ImageData(new Uint8ClampedArray(buffer), width, height);
+    ctx.putImageData(imageData, 0, 0);
+
+    document.querySelector("#cellnum").textContent = cellCount;
+}
+
+function updateStats(stepnum) {
+    document.querySelector("#stepnum").textContent = stepnum;
+}
+
+// ── Cell info ─────────────────────────────────────────────────────────────────
+let selectedCell = null;
+
+canvas.addEventListener("click", function(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    const cellx = Math.floor(x / cellSize);
+    const celly = Math.floor((canvas.height - y) / cellSize);
+
+    selectedCell = [cellx, celly];
+    simWorker.postMessage({ type: "getCell", x: cellx, y: celly });
 });
-var run = false;
-$("#run").on("click", function (){
+
+function renderCellInfo(msg) {
+    const cellinfo = $("#cellinfo");
+    if (!msg.found) {
+        selectedCell = null;
+        cellinfo.html("Click a cell to see info...");
+        return;
+    }
+    cellinfo.empty();
+    cellinfo.append(`<p>${msg.cellStr}</p><p>Neighbourhood: ${msg.neighbourhood}</p><p>Rule: ${msg.matching_rule}</p>`);
+    cellinfo.append(`<p>Plant death prob ${msg.death} genome length ${msg.genomeLength}</p>`);
+    cellinfo.append(`<p>mut exponent: ${msg.mutExp}</p>`);
+    msg.rules.forEach(function(r) {
+        cellinfo.append(`<p>${r}</p>`);
+    });
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+let run = false;
+
+document.querySelector("#step").addEventListener("click", function() {
+    simWorker.postMessage({ type: "step" });
+});
+
+$("#run").on("click", function() {
     run = !run;
     $(this).text(run ? "Stop" : "Run");
     $(this).toggleClass("btn-success btn-danger");
-    if(run){
-        gameLoop();
-    }
+    simWorker.postMessage({ type: run ? "start" : "stop" });
 });
-$("#reload").on("click", function(){
+
+$("#reload").on("click", function() {
+    if (run) {
+        run = false;
+        $("#run").text("Run").removeClass("btn-danger").addClass("btn-success");
+        simWorker.postMessage({ type: "stop" });
+    }
     reloadSim();
 });
 
@@ -113,100 +186,17 @@ $("#toggle-params").on("click", function() {
     $(this).find(".toggle-icon").toggleClass("rotated");
 });
 
-var selectedCell = null;
-
-function updateCellFocus(){
-    if (selectedCell !== null){
-        var cell = simulation.world.getCell(selectedCell[0], selectedCell[1]);
-        if (cell instanceof Cell && cell.plant && cell.plant.genome){
-            try {
-                var rules = simulation.genomeInterpreter.interpret(cell.plant.genome);
-                var neighbourhood = cell.plant.getNeighbourhood(cell);
-                var matching_rule = "None";
-                for(var i=0; i<rules.length; i++){
-                    if(rules[i].state === neighbourhood){
-                        matching_rule = `#${i} ${rules[i]}`;
-                    }
-                }
-                var death = cell.plant.getDeathProbability(simulation.params.death_factor, simulation.params.natural_exp, simulation.params.energy_exp, simulation.params.leanover_factor);
-                var cellinfo = $("#cellinfo");
-                cellinfo.empty();
-                cellinfo.append(`<p>${cell.toString()}</p><p>Neighbourhood: ${neighbourhood}</p><p>Rule: ${matching_rule}</p>`);
-                cellinfo.append(`<p>Plant death prob ${JSON.stringify(death)} genome length ${cell.plant.genome.length}</p>`);
-                cellinfo.append(`<p>mut exponent:${cell.plant.genome.mut_exp}</p>`);
-                rules.forEach(function(rule){
-                    cellinfo.append(`<p>${rule.toString()}</p>`);
-                });
-            } catch (e) {
-                console.error("Error updating cell focus:", e);
-            }
-        } else {
-            selectedCell = null;
-            $("#cellinfo").html("Click a cell to see info...");
-        }
-    }
-}
-
-canvas.addEventListener("click", function(event){
-    var rect = canvas.getBoundingClientRect();
-    var x = event.clientX - rect.left;
-    var y = event.clientY - rect.top;
-
-    var cellx = Math.floor(x / cellSize);
-    var celly = simulation.world.height - 1 - Math.floor(y / cellSize);
-
-    var cell = simulation.world.getCell(cellx, celly);
-    if (cell instanceof Cell){
-        selectedCell = [cellx, celly];
-        updateCellFocus();
-    } else {
-        selectedCell = null;
-        $("#cellinfo").html("Click a cell to see info...");
-    }
-});
-
-var cellSize = 8;
-
-// Lindevol P params
-var params_p = new SimulationParams({
-    "steps_per_frame": 1,
-    "world_width": 500,
-    "initial_population": 500,
-    "genome_interpreter": "promotor",
-    "initial_genome_length": 50,
-    "mut_replace_mode": "bytewise",
-    "mut_replace": 0.002,
-    "mut_insert": 0.0004,
-    "mut_delete": 0.0004,
-    "mut_factor": 1.5,
-    "action_map": [32, 4, 4, 4, 4, 16],
-    "death_factor": 0.32,
-    "leanover_factor": 0.15,
-    "energy_exp": -2.5
-});
-
-// Lindevol C params
-var params_c = new SimulationParams({
-    "genome_interpreter": "block",
-    "initial_genome_length": 400,
-    "mut_replace_mode": "bitwise",
-    "mut_replace": 0.001,
-    "action_map": [200, 21, 0, 18, 18, 0],
-    "death_factor": 0.2
-});
-
-import { paramInfo } from "./paramInfo.js";
-
+// ── Parameter widgets ─────────────────────────────────────────────────────────
 function buildWidgets() {
     let html = "";
     let actionMapHtml = "";
-    
+
     paramInfo.forEach(param => {
         let attrs = "";
         for (let key in param.attrs) {
             attrs += ` ${key}="${param.attrs[key]}"`;
         }
-        
+
         let labelHtml = `
             <div class="param-label-container">
                 <label>${param.label}</label>
@@ -227,25 +217,20 @@ function buildWidgets() {
             inputHtml = `<input type="number" id="w_${param.id}" class="form-control widget-input"${attrs}>`;
             html += `<div class="form-group">${labelHtml}${inputHtml}</div>`;
         } else if (param.type === "array") {
-            actionMapHtml = `
-                <div class="action-map-grid">
-                    ${labelHtml}
-            `;
+            actionMapHtml = `<div class="action-map-grid">${labelHtml}`;
             param.labels.forEach((al, idx) => {
                 actionMapHtml += `
                     <div class="form-group">
                         <label>${al}</label>
                         <input type="number" id="w_am_${idx}" class="form-control widget-input action-map-input">
-                    </div>
-                `;
+                    </div>`;
             });
             actionMapHtml += `</div>`;
         }
     });
-    
+
     $("#params-form").html(html + actionMapHtml);
-    
-    // Bind toggle
+
     $(".info-icon").on("click", function() {
         $(this).parent().next(".param-description").toggleClass("show");
     });
@@ -259,108 +244,60 @@ function updateWidgetsFromJson() {
     try {
         const params = JSON.parse($("#params").val());
         widgetIds.forEach(id => {
-            if (params[id] !== undefined) {
-                $(`#w_${id}`).val(params[id]);
-            }
+            if (params[id] !== undefined) $(`#w_${id}`).val(params[id]);
         });
         if (params.action_map && params.action_map.length === 6) {
-            for(let i=0; i<6; i++) {
-                $(`#w_am_${i}`).val(params.action_map[i]);
-            }
+            for (let i = 0; i < 6; i++) $(`#w_am_${i}`).val(params.action_map[i]);
         }
-    } catch(e) {
-        // ignore invalid JSON while typing
-    }
+    } catch(e) { /* ignore invalid JSON */ }
 }
 
 function updateJsonFromWidgets() {
     try {
         let params = {};
         try { params = JSON.parse($("#params").val()); } catch(e) {}
-        
         widgetIds.forEach(id => {
             let val = $(`#w_${id}`).val();
-            if (!isNaN(val) && val.trim() !== "") {
-                val = Number(val);
-            }
+            if (!isNaN(val) && val.trim() !== "") val = Number(val);
             params[id] = val;
         });
-        
-        let action_map = [];
-        for(let i=0; i<6; i++) {
-            action_map.push(Number($(`#w_am_${i}`).val()));
-        }
+        const action_map = [];
+        for (let i = 0; i < 6; i++) action_map.push(Number($(`#w_am_${i}`).val()));
         params.action_map = action_map;
-        
         $("#params").val(JSON.stringify(params, null, 4));
-    } catch(e) {
-        console.error(e);
-    }
+    } catch(e) { console.error(e); }
 }
 
-$("#params").on("input", function() {
-    updateWidgetsFromJson();
+$("#params").on("input", function() { updateWidgetsFromJson(); });
+$("#params-form").on("input change", ".widget-input", function() { updateJsonFromWidgets(); });
+
+// ── Defaults ──────────────────────────────────────────────────────────────────
+const params_p = new SimulationParams({
+    "steps_per_frame": 1,
+    "world_width": 500,
+    "initial_population": 500,
+    "genome_interpreter": "promotor",
+    "initial_genome_length": 50,
+    "mut_replace_mode": "bytewise",
+    "mut_replace": 0.002,
+    "mut_insert": 0.0004,
+    "mut_delete": 0.0004,
+    "mut_factor": 1.5,
+    "action_map": [32, 4, 4, 4, 4, 16],
+    "death_factor": 0.32,
+    "leanover_factor": 0.15,
+    "energy_exp": -2.5
 });
 
-// Since widgets are dynamically generated, use delegation or bind after build
-$("#params-form").on("input change", ".widget-input", function() {
-    updateJsonFromWidgets();
-});
-
-// Initialize with Lindevol P params
 $("#params").val(JSON.stringify(params_p, null, 4));
 updateWidgetsFromJson();
 
-var simulation;
-var data;
-function reloadSim(){
-    var params = JSON.parse($("#params").val());
-    var sim_params = new SimulationParams(params);
-    simulation = new Simulation(sim_params);
-    data = new SimData(simulation);
-    simulation.init_population();
-    
-    // dynamically resize canvas to match world size
-    canvas.width = simulation.world.width * cellSize;
-    canvas.height = simulation.world.height * cellSize;
-    ctx.translate(canvasOffset, canvasOffset);
-
+// ── Reload ────────────────────────────────────────────────────────────────────
+function reloadSim() {
+    const params = JSON.parse($("#params").val());
+    params.cellSize = cellSize;
     initCharts();
-
-    drawScreen();
-}
-
-
-function drawScreen(){
-    ctx.save();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = "black";
-    simulation.world.draw(ctx, cellSize);
-    ctx.restore();
-}
-
-function gameLoop(){
-    if(!run) return;
-    for(let i=0; i<simulation.params.steps_per_frame; i++){
-        simStep();
-    }
-    updateCellFocus();
-    updateStats();
-    drawScreen();
-    window.requestAnimationFrame(gameLoop);
-}
-
-function updateStats(){
-    document.querySelector("#stepnum").textContent = simulation.stepnum;
-}
-
-function simStep(){
-    simulation.step();
-    
-    if (simulation.stepnum % simulation.params.record_interval === 0 || simulation.stepnum === 1) {
-        data.recordStep();
-        updateCharts();
-    }
+    simWorker.postMessage({ type: "init", params });
 }
 
 reloadSim();
