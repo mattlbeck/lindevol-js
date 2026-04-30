@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>LindEvol Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,6 +17,7 @@
             --accent: #5e8a3f;
             --accent-hover: #4a6e31;
         }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
@@ -24,10 +26,12 @@
             padding: 20px;
             overflow-x: hidden;
         }
+
         .dashboard-container {
             max-width: 1600px;
             margin: 0 auto;
         }
+
         header {
             display: flex;
             justify-content: space-between;
@@ -36,6 +40,7 @@
             padding-bottom: 16px;
             border-bottom: 1px solid var(--glass-border);
         }
+
         h1 {
             font-size: 24px;
             font-weight: 600;
@@ -44,11 +49,13 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .control {
             display: flex;
             gap: 12px;
             align-items: center;
         }
+
         .btn {
             border-radius: 8px;
             font-weight: 500;
@@ -56,33 +63,44 @@
             border: none;
             transition: all 0.2s ease;
         }
-        .btn-primary { background: var(--accent); }
-        .btn-primary:hover { background: var(--accent-hover); }
+
+        .btn-primary {
+            background: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
         .stats-badge {
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             padding: 8px 16px;
             border-radius: 8px;
             font-family: monospace;
             border: 1px solid var(--glass-border);
         }
+
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
             padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         .sim-panel {
             margin-bottom: 24px;
             overflow-x: auto;
         }
+
         canvas {
             background: #111510;
             border-radius: 8px;
             display: block;
             image-rendering: pixelated;
         }
+
         .cell-info {
             margin-top: 16px;
             font-family: monospace;
@@ -90,22 +108,30 @@
             color: #c6e070;
             min-height: 40px;
         }
+
         .cell-info p {
             margin-bottom: 4px;
         }
+
         .params-dashboard {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
         }
+
         @media (max-width: 1024px) {
-            .params-dashboard { grid-template-columns: 1fr; }
+            .params-dashboard {
+                grid-template-columns: 1fr;
+            }
         }
-        .json-panel h3, .widgets-panel h3 {
+
+        .json-panel h3,
+        .widgets-panel h3 {
             font-size: 18px;
             margin-bottom: 16px;
             color: #cbd5e1;
         }
+
         .code-editor {
             background: #111510 !important;
             color: #a1d65d !important;
@@ -115,28 +141,34 @@
             height: 600px !important;
             resize: vertical;
         }
+
         .code-editor:focus {
             box-shadow: 0 0 0 2px var(--accent);
         }
+
         .widgets-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
         }
+
         .form-group label {
             font-size: 13px;
             color: var(--text-muted);
             margin-bottom: 4px;
         }
+
         .param-label-container {
             display: flex;
             align-items: center;
             gap: 6px;
             margin-bottom: 4px;
         }
+
         .param-label-container label {
             margin-bottom: 0;
         }
+
         .info-icon {
             color: var(--accent);
             cursor: pointer;
@@ -151,69 +183,86 @@
             justify-content: center;
             transition: all 0.2s;
         }
+
         .info-icon:hover {
             background: var(--accent);
             color: #fff;
         }
+
         .param-description {
             display: none;
             font-size: 12px;
             color: #b5cca8;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.3);
             padding: 8px;
             border-radius: 6px;
             margin-bottom: 8px;
             border-left: 2px solid var(--accent);
         }
+
         .param-description.show {
             display: block;
         }
-        .form-control, .custom-select {
-            background: rgba(0,0,0,0.2) !important;
+
+        .form-control,
+        .custom-select {
+            background: rgba(0, 0, 0, 0.2) !important;
             border: 1px solid var(--glass-border) !important;
             color: var(--text-main) !important;
             border-radius: 6px;
         }
-        .form-control:focus, .custom-select:focus {
+
+        .form-control:focus,
+        .custom-select:focus {
             box-shadow: 0 0 0 2px var(--accent);
             border-color: transparent !important;
         }
+
         .action-map-grid {
             grid-column: span 2;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.2);
             padding: 16px;
             border-radius: 8px;
             border: 1px solid var(--glass-border);
         }
-        .action-map-grid > label {
+
+        .action-map-grid>label {
             grid-column: span 3;
             color: #c6e070;
             font-weight: 500;
         }
+
         .charts-dashboard {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
             margin-top: 24px;
         }
+
         .charts-dashboard .glass-panel {
             position: relative;
         }
+
         .charts-dashboard h3 {
             font-size: 16px;
             margin-bottom: 12px;
             color: #cbd5e1;
             text-align: center;
         }
+
         @media (max-width: 1024px) {
-            .charts-dashboard { grid-template-columns: 1fr; }
+            .charts-dashboard {
+                grid-template-columns: 1fr;
+            }
         }
+
         .collapsible-section {
             margin-bottom: 24px;
         }
+
         .collapsible-toggle {
             width: 100%;
             background: var(--glass-bg);
@@ -229,22 +278,28 @@
             cursor: pointer;
             transition: background 0.2s ease;
         }
+
         .collapsible-toggle:hover {
             background: rgba(141, 198, 63, 0.2);
         }
+
         .collapsible-content {
             display: block;
             margin-top: 16px;
         }
+
         .collapsible-content.hidden {
             display: none;
         }
+
         .toggle-icon {
             transition: transform 0.3s ease;
         }
+
         .toggle-icon.rotated {
             transform: rotate(-90deg);
         }
+
         /* Disturbance console */
         .disturbance-console {
             display: flex;
@@ -252,45 +307,56 @@
             gap: 16px;
             flex-wrap: wrap;
         }
+
         .disturbance-console .form-group {
             display: flex;
             align-items: center;
             gap: 8px;
             margin-bottom: 0;
         }
+
         .disturbance-console label {
             font-size: 13px;
             color: var(--text-muted);
             white-space: nowrap;
             margin-bottom: 0;
         }
+
         .disturbance-console .form-control {
             width: 90px;
         }
+
         .btn-disturb {
             background: #b45309;
             color: #fff;
         }
-        .btn-disturb:hover { background: #92400e; }
+
+        .btn-disturb:hover {
+            background: #92400e;
+        }
+
         .btn-brush {
-            background: rgba(94,138,63,0.2);
+            background: rgba(94, 138, 63, 0.2);
             color: var(--text-main);
             border: 1px solid var(--glass-border);
         }
+
         .btn-brush.active {
             background: var(--accent);
             color: #fff;
-            box-shadow: 0 0 0 2px rgba(94,138,63,0.4);
+            box-shadow: 0 0 0 2px rgba(94, 138, 63, 0.4);
         }
+
         canvas.brush-mode {
             cursor: crosshair;
         }
     </style>
 </head>
+
 <body>
     <div class="dashboard-container">
         <header>
-            <h1>LindEvol Artificial Ecology</h1>
+            <h1>LindEvol: Simulating Plant Evolution and Ecology</h1>
             <div class="control">
                 <button class="btn btn-primary" id="step">Step</button>
                 <button class="btn btn-success" id="run">Run</button>
@@ -320,7 +386,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="d-strength">Strength (0–1)</label>
-                                <input type="number" id="d-strength" class="form-control" value="0.1" min="0" max="1" step="0.01">
+                                <input type="number" id="d-strength" class="form-control" value="0.1" min="0" max="1"
+                                    step="0.01">
                             </div>
                             <button class="btn btn-disturb" id="apply-disturbance">Apply Settings</button>
                             <button class="btn btn-disturb" id="disturb-now">⚡ Disturb Now</button>
@@ -379,4 +446,5 @@
     </div>
     <script src="main.bundle.js"></script>
 </body>
+
 </html>
