@@ -5,6 +5,7 @@ import {NEIGHBOURHOOD} from "./actions.js";
 class Plant{
     constructor(x, world, genome, useInternalState=false) {
         this.world = world;
+        this.energisedCount = 0;
         this.cells = [new Cell(this, this.world.getX(x), 0)];
         this.genome = genome;
         this.useInternalState = useInternalState;
@@ -84,13 +85,7 @@ class Plant{
     }
 
     getKillProbability(){
-        var numEnergy = 0;
-        this.cells.forEach(function(cell){
-            if(cell.energised){
-                numEnergy+=1;
-            }
-        });
-        return 1/numEnergy;
+        return 1/this.energisedCount;
     }
 
     /**
@@ -101,14 +96,10 @@ class Plant{
      */
     getDeathProbability(death_factor, natural_exp, energy_exp, leanover_factor){
         var numCells = this.cells.length;
-        var numEnergised = 0;
         var leanoverEnergised = 0;
         var rootCell = this.cells[0];
         for(var i=0; i<this.cells.length; i++){
             var cell = this.cells[i];
-            if(cell.energised){
-                numEnergised++;
-            }
             var le = this.world.width/2 - ( (( 1.5*this.world.width ) + cell.x - rootCell.x)  % this.world.width);
             leanoverEnergised += le;
         }
@@ -121,7 +112,7 @@ class Plant{
         var leanoverTerm = leanoverCells*Math.abs(leanoverEnergised);
         
         var d_natural = Math.pow(numCells, natural_exp);
-        var d_energy = Math.pow(numEnergised+1, energy_exp);
+        var d_energy = Math.pow(this.energisedCount+1, energy_exp);
         var d_leanover = leanover_factor*leanoverTerm;
         var pDeath = death_factor * d_natural * d_energy + d_leanover;
         return {

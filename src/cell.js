@@ -4,9 +4,25 @@ class Cell{
         this.plant = plant;
         this.x = x;
         this.y = y;
-        this.energised = false;
+        this._energised = false;
         this.internalState = 0;
         this.nextInternalState = 0;
+    }
+
+    get energised() {
+        return this._energised;
+    }
+
+    set energised(value) {
+        if (this._energised === value) return;
+        this._energised = value;
+        if (this.plant) {
+            if (value) {
+                this.plant.energisedCount++;
+            } else {
+                this.plant.energisedCount--;
+            }
+        }
     }
 
     updateState(){

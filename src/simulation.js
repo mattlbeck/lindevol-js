@@ -6,6 +6,7 @@ class SimulationParams{
     constructor(params={}){
         this.random_seed = 1;
         this.record_interval = 10;
+        this.steps_per_frame = 1;
 
         this.world_width = 250;
         this.world_height = 40;

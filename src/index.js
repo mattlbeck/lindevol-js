@@ -91,6 +91,9 @@ function updateCharts() {
 // control
 document.querySelector("#step").addEventListener("click", function (){
     simStep();
+    updateCellFocus();
+    updateStats();
+    drawScreen();
 });
 var run = false;
 $("#run").on("click", function (){
@@ -166,6 +169,7 @@ var cellSize = 8;
 
 // Lindevol P params
 var params_p = new SimulationParams({
+    "steps_per_frame": 1,
     "world_width": 500,
     "initial_population": 500,
     "genome_interpreter": "promotor",
@@ -336,10 +340,14 @@ function drawScreen(){
 }
 
 function gameLoop(){
-    simStep();
-    if(run){
-        window.requestAnimationFrame(gameLoop);
+    if(!run) return;
+    for(let i=0; i<simulation.params.steps_per_frame; i++){
+        simStep();
     }
+    updateCellFocus();
+    updateStats();
+    drawScreen();
+    window.requestAnimationFrame(gameLoop);
 }
 
 function updateStats(){
@@ -353,10 +361,6 @@ function simStep(){
         data.recordStep();
         updateCharts();
     }
-    
-    updateCellFocus();
-    updateStats();
-    drawScreen();
 }
 
 reloadSim();
