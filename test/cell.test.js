@@ -1,5 +1,6 @@
 import {Cell} from "../src/cell.js";
-var expect = require("chai").expect;
+import chai from "chai";
+const {expect} = chai;
 describe("Cell", function (){
     it("should not be energised by default", function (){
         var cell = new Cell(0, 0);

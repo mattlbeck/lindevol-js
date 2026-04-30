@@ -1,6 +1,7 @@
-var should = require('chai').should();
-var assert = require('chai').assert
-var expect = require('chai').expect
+import chai from 'chai';
+const should = chai.should();
+const assert = chai.assert;
+const expect = chai.expect;
 
 import {Simulation, SimulationParams} from "../src/simulation.js";
 import {World} from "../src/world.js";

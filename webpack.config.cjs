@@ -5,12 +5,17 @@ module.exports = {
   entry: './src/index.js',
   devtool: 'inline-source-map',
   devServer: {
-    contentBase: './dist',
-    index: 'index.html'
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].bundle.js'
   },
-  node: { fs: 'empty' }
+  resolve: {
+    fallback: {
+      fs: false
+    }
+  }
 };

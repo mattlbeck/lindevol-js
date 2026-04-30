@@ -1,6 +1,7 @@
-var should = require('chai').should();
-var assert = require('chai').assert
-var expect = require('chai').expect
+import chai from 'chai';
+const should = chai.should();
+const assert = chai.assert;
+const expect = chai.expect;
 
 import {ByteArray, BlockInterpreter, PromotorInterpreter} from "../src/genome.js";
 import {Divide} from "../src/actions.js";
@@ -71,7 +72,7 @@ describe("Byte array", function(){
 describe("Block interpretation", function(){
     var interpreter = new BlockInterpreter([220, 15, 0, 10, 10, 0])
 
-    var ba = new ByteArray([0, 0, 0, 9, 17, 210])
+    var ba = ByteArray.from([0, 0, 0, 9, 17, 210])
     var rules = interpreter.interpret(ba)
     
     it("interprets the correct number of rules", function(){
@@ -92,7 +93,7 @@ describe("Promotor interpretation", function(){
     var interpreter = new PromotorInterpreter([220, 15, 0, 10, 10, 0])
     var rules;
     beforeEach("interpret", function(){
-        var ba = new ByteArray([128, 0, 64]);
+        var ba = ByteArray.from([128, 0, 64]);
         rules = interpreter.interpret(ba)
     })
     it("interprets the correct number of rules", function(){
