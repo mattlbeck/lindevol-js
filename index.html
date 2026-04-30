@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>LindEvol Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        :root {
+            --bg-color: #1a1e16;
+            --glass-bg: rgba(43, 56, 38, 0.7);
+            --glass-border: rgba(181, 204, 168, 0.15);
+            --text-main: #e8f0e1;
+            --text-muted: #9ba892;
+            --accent: #5e8a3f;
+            --accent-hover: #4a6e31;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            background: linear-gradient(90deg, #8dc63f, #c6e070);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .control {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .stats-badge {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            border: 1px solid var(--glass-border);
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .sim-panel {
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        canvas {
+            background: #111510;
+            border-radius: 8px;
+            display: block;
+            image-rendering: pixelated;
+        }
+
+        .cell-info {
+            margin-top: 16px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #c6e070;
+            min-height: 40px;
+        }
+
+        .cell-info p {
+            margin-bottom: 4px;
+        }
+
+        .params-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .params-dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .json-panel h3,
+        .widgets-panel h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #cbd5e1;
+        }
+
+        .code-editor {
+            background: #111510 !important;
+            color: #a1d65d !important;
+            font-family: 'Consolas', monospace;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: 8px;
+            height: 600px !important;
+            resize: vertical;
+        }
+
+        .code-editor:focus {
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        .widgets-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .param-label-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .param-label-container label {
+            margin-bottom: 0;
+        }
+
+        .info-icon {
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(94, 138, 63, 0.2);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .info-icon:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .param-description {
+            display: none;
+            font-size: 12px;
+            color: #b5cca8;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 2px solid var(--accent);
+        }
+
+        .param-description.show {
+            display: block;
+        }
+
+        .form-control,
+        .custom-select {
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid var(--glass-border) !important;
+            color: var(--text-main) !important;
+            border-radius: 6px;
+        }
+
+        .form-control:focus,
+        .custom-select:focus {
+            box-shadow: 0 0 0 2px var(--accent);
+            border-color: transparent !important;
+        }
+
+        .action-map-grid {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .action-map-grid>label {
+            grid-column: span 3;
+            color: #c6e070;
+            font-weight: 500;
+        }
+
+        .charts-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .charts-dashboard .glass-panel {
+            position: relative;
+        }
+
+        .charts-dashboard h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #cbd5e1;
+            text-align: center;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .collapsible-section {
+            margin-bottom: 24px;
+        }
+
+        .collapsible-toggle {
+            width: 100%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 20px;
+            color: var(--text-main);
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .collapsible-toggle:hover {
+            background: rgba(141, 198, 63, 0.2);
+        }
+
+        .collapsible-content {
+            display: block;
+            margin-top: 16px;
+        }
+
+        .collapsible-content.hidden {
+            display: none;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-icon.rotated {
+            transform: rotate(-90deg);
+        }
+
+        /* Disturbance console */
+        .disturbance-console {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .disturbance-console .form-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0;
+        }
+
+        .disturbance-console label {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            margin-bottom: 0;
+        }
+
+        .disturbance-console .form-control {
+            width: 90px;
+        }
+
+        .btn-disturb {
+            background: #b45309;
+            color: #fff;
+        }
+
+        .btn-disturb:hover {
+            background: #92400e;
+        }
+
+        .btn-brush {
+            background: rgba(94, 138, 63, 0.2);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-brush.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 0 2px rgba(94, 138, 63, 0.4);
+        }
+
+        canvas.brush-mode {
+            cursor: crosshair;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>LindEvol: Simulating Plant Evolution and Ecology</h1>
+            <div class="control">
+                <button class="btn btn-primary" id="step">Step</button>
+                <button class="btn btn-success" id="run">Run</button>
+                <button class="btn btn-warning" id="reload">Apply &amp; Reload</button>
+                <span class="stats-badge">Step: <span id="stepnum">0</span> | Cells: <span id="cellnum">0</span></span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="sim-panel glass-panel">
+                <canvas id="mainbox" width="2500" height="400"></canvas>
+                <div id="cellinfo" class="cell-info">Click a cell to see info...</div>
+            </div>
+
+            <!-- Disturbance Console -->
+            <div class="collapsible-section">
+                <button class="collapsible-toggle" id="toggle-disturbance">
+                    <span>⚡ Disturbance Console</span>
+                    <span class="toggle-icon rotated">▼</span>
+                </button>
+                <div class="collapsible-content hidden" id="disturbance-content">
+                    <div class="glass-panel">
+                        <div class="disturbance-console">
+                            <div class="form-group">
+                                <label for="d-interval">Interval (steps, 0=off)</label>
+                                <input type="number" id="d-interval" class="form-control" value="0" min="0" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="d-strength">Strength (0–1)</label>
+                                <input type="number" id="d-strength" class="form-control" value="0.1" min="0" max="1"
+                                    step="0.01">
+                            </div>
+                            <button class="btn btn-disturb" id="apply-disturbance">Apply Settings</button>
+                            <button class="btn btn-disturb" id="disturb-now">⚡ Disturb Now</button>
+                            <button class="btn btn-brush" id="brush-toggle">🖌️ Brush Mode</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parameters -->
+            <div class="collapsible-section">
+                <button class="collapsible-toggle" id="toggle-params">
+                    <span>⚙️ Parameters &amp; Configuration</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="collapsible-content" id="params-content">
+                    <div class="params-dashboard">
+                        <div class="json-panel glass-panel">
+                            <h3>JSON Configuration</h3>
+                            <textarea id="params" class="form-control code-editor"></textarea>
+                        </div>
+                        <div class="widgets-panel glass-panel">
+                            <h3>Parameter Controls</h3>
+                            <form id="params-form" class="widgets-grid">
+                                <!-- dynamically generated by src/index.js -->
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-dashboard">
+                <div class="glass-panel">
+                    <h3>Population &amp; Cells</h3>
+                    <canvas id="chart-population"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Average Plant Size</h3>
+                    <canvas id="chart-plant-size"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Average Plant Height</h3>
+                    <canvas id="chart-plant-height"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Average Genome Size</h3>
+                    <canvas id="chart-genome-size"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Average Mutation Exponent</h3>
+                    <canvas id="chart-mut-exp"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="main.bundle.js"></script>
+</body>
+
+</html>
