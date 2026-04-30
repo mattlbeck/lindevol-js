@@ -232,7 +232,92 @@ describe("Plant", function() {
                 world.plants.length.should.equal(2);
             });
         });
-    })
-    
+    });
 });
 
+describe("World.getPixelBuffer", function() {
+    const CELL_SIZE = 4;
+
+    context("In an empty world", function() {
+        var world;
+        before(function() {
+            world = new World(10, 5);
+        });
+
+        it("returns buffer with correct byte length", function() {
+            const result = world.getPixelBuffer(CELL_SIZE);
+            const expectedBytes = 10 * CELL_SIZE * 5 * CELL_SIZE * 4;
+            expect(result.buffer.length).to.equal(expectedBytes);
+        });
+
+        it("returns correct pixel dimensions", function() {
+            const result = world.getPixelBuffer(CELL_SIZE);
+            expect(result.width).to.equal(10 * CELL_SIZE);
+            expect(result.height).to.equal(5 * CELL_SIZE);
+        });
+
+        it("all pixels are transparent (alpha=0) with no cells", function() {
+            const result = world.getPixelBuffer(CELL_SIZE);
+            const allTransparent = Array.from(result.buffer).every((v, i) => i % 4 !== 3 || v === 0);
+            expect(allTransparent).to.be.true;
+        });
+
+        it("reports cellCount of 0", function() {
+            const result = world.getPixelBuffer(CELL_SIZE);
+            expect(result.cellCount).to.equal(0);
+        });
+    });
+
+    context("In a world with one plant", function() {
+        var world, plant;
+        before(function() {
+            world = new World(10, 5);
+            world.sowPlant(null, 5);
+            plant = world.plants[0];
+        });
+
+        it("reports cellCount of 1 for a single-cell plant", function() {
+            const result = world.getPixelBuffer(CELL_SIZE);
+            expect(result.cellCount).to.equal(1);
+        });
+
+        it("has at least one opaque pixel where the cell is", function() {
+            const result = world.getPixelBuffer(CELL_SIZE);
+            // The cell is at world (5, 0) → canvas top-left: px=20, py=(5-1-0)*4=16
+            const px = 5 * CELL_SIZE;
+            const py = (5 - 1 - 0) * CELL_SIZE;
+            // Check the inner pixel (avoid border which may differ)
+            const innerPx = px + 1, innerPy = py + 1;
+            const idx = (innerPy * result.width + innerPx) * 4;
+            expect(result.buffer[idx + 3]).to.equal(255); // fully opaque
+        });
+
+        it("reports cellCount of 2 after growing the plant", function() {
+            plant.growFromCell(plant.cells[0], [0, 1]);
+            const result = world.getPixelBuffer(CELL_SIZE);
+            expect(result.cellCount).to.equal(2);
+        });
+    });
+});
+
+describe("World disturbance", function() {
+    context("killPlant removes all cells and the plant", function() {
+        var world, plant;
+        before(function() {
+            world = new World(10, 10);
+            world.sowPlant(null, 5);
+            plant = world.plants[0];
+            plant.growFromCell(plant.cells[0], [0, 1]);
+            plant.growFromCell(plant.cells[0], [1, 0]);
+            world.killPlant(plant);
+        });
+
+        it("plant is removed from world.plants", function() {
+            expect(world.plants).to.not.include(plant);
+        });
+
+        it("world grid cells are cleared", function() {
+            expect(world.getCell(5, 0)).to.be.null;
+        });
+    });
+});

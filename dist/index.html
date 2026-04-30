@@ -245,6 +245,46 @@
         .toggle-icon.rotated {
             transform: rotate(-90deg);
         }
+        /* Disturbance console */
+        .disturbance-console {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .disturbance-console .form-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0;
+        }
+        .disturbance-console label {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            margin-bottom: 0;
+        }
+        .disturbance-console .form-control {
+            width: 90px;
+        }
+        .btn-disturb {
+            background: #b45309;
+            color: #fff;
+        }
+        .btn-disturb:hover { background: #92400e; }
+        .btn-brush {
+            background: rgba(94,138,63,0.2);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+        }
+        .btn-brush.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 0 2px rgba(94,138,63,0.4);
+        }
+        canvas.brush-mode {
+            cursor: crosshair;
+        }
     </style>
 </head>
 <body>
@@ -254,20 +294,46 @@
             <div class="control">
                 <button class="btn btn-primary" id="step">Step</button>
                 <button class="btn btn-success" id="run">Run</button>
-                <button class="btn btn-warning" id="reload">Apply & Reload</button>
+                <button class="btn btn-warning" id="reload">Apply &amp; Reload</button>
                 <span class="stats-badge">Step: <span id="stepnum">0</span> | Cells: <span id="cellnum">0</span></span>
             </div>
         </header>
-        
+
         <div class="main-content">
             <div class="sim-panel glass-panel">
                 <canvas id="mainbox" width="2500" height="400"></canvas>
                 <div id="cellinfo" class="cell-info">Click a cell to see info...</div>
             </div>
 
+            <!-- Disturbance Console -->
+            <div class="collapsible-section">
+                <button class="collapsible-toggle" id="toggle-disturbance">
+                    <span>⚡ Disturbance Console</span>
+                    <span class="toggle-icon rotated">▼</span>
+                </button>
+                <div class="collapsible-content hidden" id="disturbance-content">
+                    <div class="glass-panel">
+                        <div class="disturbance-console">
+                            <div class="form-group">
+                                <label for="d-interval">Interval (steps, 0=off)</label>
+                                <input type="number" id="d-interval" class="form-control" value="0" min="0" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="d-strength">Strength (0–1)</label>
+                                <input type="number" id="d-strength" class="form-control" value="0.1" min="0" max="1" step="0.01">
+                            </div>
+                            <button class="btn btn-disturb" id="apply-disturbance">Apply Settings</button>
+                            <button class="btn btn-disturb" id="disturb-now">⚡ Disturb Now</button>
+                            <button class="btn btn-brush" id="brush-toggle">🖌️ Brush Mode</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parameters -->
             <div class="collapsible-section">
                 <button class="collapsible-toggle" id="toggle-params">
-                    <span>⚙️ Parameters & Configuration</span>
+                    <span>⚙️ Parameters &amp; Configuration</span>
                     <span class="toggle-icon">▼</span>
                 </button>
                 <div class="collapsible-content" id="params-content">
@@ -276,7 +342,6 @@
                             <h3>JSON Configuration</h3>
                             <textarea id="params" class="form-control code-editor"></textarea>
                         </div>
-                        
                         <div class="widgets-panel glass-panel">
                             <h3>Parameter Controls</h3>
                             <form id="params-form" class="widgets-grid">
@@ -286,10 +351,11 @@
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Charts -->
             <div class="charts-dashboard">
                 <div class="glass-panel">
-                    <h3>Population & Cells</h3>
+                    <h3>Population &amp; Cells</h3>
                     <canvas id="chart-population"></canvas>
                 </div>
                 <div class="glass-panel">

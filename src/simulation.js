@@ -7,6 +7,8 @@ class SimulationParams{
         this.random_seed = 1;
         this.record_interval = 10;
         this.steps_per_frame = 1;
+        this.disturbance_interval = 0;
+        this.disturbance_strength = 0.1;
 
         this.world_width = 250;
         this.world_height = 40;

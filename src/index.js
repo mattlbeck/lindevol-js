@@ -128,9 +128,12 @@ function updateStats(stepnum) {
 }
 
 // ── Cell info ─────────────────────────────────────────────────────────────────
+let brushMode = false;
+let isPainting = false;
 let selectedCell = null;
 
 canvas.addEventListener("click", function(event) {
+    if (brushMode) return; // brush mode handles its own mouse events
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -185,6 +188,58 @@ $("#toggle-params").on("click", function() {
     $("#params-content").toggleClass("hidden");
     $(this).find(".toggle-icon").toggleClass("rotated");
 });
+
+// ── Disturbance console ───────────────────────────────────────────────────────
+$("#toggle-disturbance").on("click", function() {
+    $("#disturbance-content").toggleClass("hidden");
+    $(this).find(".toggle-icon").toggleClass("rotated");
+});
+
+$("#apply-disturbance").on("click", function() {
+    simWorker.postMessage({
+        type: "updateDisturbance",
+        interval: Number($("#d-interval").val()),
+        strength: Number($("#d-strength").val())
+    });
+});
+
+$("#disturb-now").on("click", function() {
+    simWorker.postMessage({
+        type: "disturb",
+        strength: Number($("#d-strength").val())
+    });
+});
+
+// ── Brush mode ────────────────────────────────────────────────────────────────
+
+$("#brush-toggle").on("click", function() {
+    brushMode = !brushMode;
+    $(this).toggleClass("active");
+    canvas.classList.toggle("brush-mode", brushMode);
+});
+
+canvas.addEventListener("mousedown", function(event) {
+    if (!brushMode) return;
+    isPainting = true;
+    erasePlantAt(event);
+});
+
+canvas.addEventListener("mousemove", function(event) {
+    if (!brushMode || !isPainting) return;
+    erasePlantAt(event);
+});
+
+canvas.addEventListener("mouseup", function() { isPainting = false; });
+canvas.addEventListener("mouseleave", function() { isPainting = false; });
+
+function erasePlantAt(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const cellx = Math.floor(x / cellSize);
+    const celly = Math.floor((canvas.height - y) / cellSize);
+    simWorker.postMessage({ type: "killCell", x: cellx, y: celly });
+}
 
 // ── Parameter widgets ─────────────────────────────────────────────────────────
 function buildWidgets() {

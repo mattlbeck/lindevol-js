@@ -29,6 +29,18 @@ self.onmessage = function(event) {
     case "getCell":
         sendCellInfo(msg.x, msg.y);
         break;
+    case "disturb":
+        applyDisturbance(msg.strength);
+        pushFrame();
+        break;
+    case "killCell":
+        killCellAt(msg.x, msg.y);
+        pushFrame();
+        break;
+    case "updateDisturbance":
+        simulation.params.disturbance_interval = msg.interval;
+        simulation.params.disturbance_strength = msg.strength;
+        break;
     }
 };
 
@@ -62,14 +74,41 @@ function loop() {
 function doStep() {
     simulation.step();
 
+    // Periodic disturbance
+    const di = simulation.params.disturbance_interval;
+    if (di > 0 && simulation.stepnum % di === 0) {
+        applyDisturbance(simulation.params.disturbance_strength);
+    }
+
     if (simulation.stepnum % simulation.params.record_interval === 0 || simulation.stepnum === 1) {
         data.recordStep();
-        // send stats snapshot (clone the arrays to avoid transfer issues)
         self.postMessage({
             type: "stats",
             data: JSON.parse(JSON.stringify(data.data)),
             stepnum: simulation.stepnum
         });
+    }
+}
+
+function applyDisturbance(strength) {
+    const world = simulation.world;
+    const plants = world.plants;
+    if (plants.length === 0) return;
+    const numToKill = Math.max(1, Math.floor(strength * plants.length));
+    // Shuffle a sample and kill
+    const shuffled = plants.slice().sort(() => Math.random() - 0.5);
+    for (let i = 0; i < numToKill && i < shuffled.length; i++) {
+        // Check plant still alive (not killed by previous iteration)
+        if (world.plants.includes(shuffled[i])) {
+            world.killPlant(shuffled[i]);
+        }
+    }
+}
+
+function killCellAt(x, y) {
+    const cell = simulation.world.getCell(x, y);
+    if (cell && cell.plant) {
+        simulation.world.killPlant(cell.plant);
     }
 }
 
