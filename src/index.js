@@ -107,12 +107,65 @@ var params_c = new SimulationParams({
     "death_factor": 0.2
 });
 
-const widgetIds = [
-    "random_seed", "world_width", "world_height", "initial_population",
-    "energy_prob", "death_factor", "natural_exp", "energy_exp", "leanover_factor",
-    "mut_replace_mode", "mut_replace", "mut_insert", "mut_delete", "mut_factor",
-    "initial_mut_exp", "genome_interpreter", "initial_genome_length"
-];
+import { paramInfo } from "./paramInfo.js";
+
+function buildWidgets() {
+    let html = "";
+    let actionMapHtml = "";
+    
+    paramInfo.forEach(param => {
+        let attrs = "";
+        for (let key in param.attrs) {
+            attrs += ` ${key}="${param.attrs[key]}"`;
+        }
+        
+        let labelHtml = `
+            <div class="param-label-container">
+                <label>${param.label}</label>
+                <div class="info-icon" title="Toggle description">?</div>
+            </div>
+            <div class="param-description">${param.description}</div>
+        `;
+
+        let inputHtml = "";
+        if (param.type === "select") {
+            inputHtml = `<select id="w_${param.id}" class="custom-select widget-input"${attrs}>`;
+            param.options.forEach(opt => {
+                inputHtml += `<option value="${opt}">${opt}</option>`;
+            });
+            inputHtml += `</select>`;
+            html += `<div class="form-group">${labelHtml}${inputHtml}</div>`;
+        } else if (param.type === "number") {
+            inputHtml = `<input type="number" id="w_${param.id}" class="form-control widget-input"${attrs}>`;
+            html += `<div class="form-group">${labelHtml}${inputHtml}</div>`;
+        } else if (param.type === "array") {
+            actionMapHtml = `
+                <div class="action-map-grid">
+                    ${labelHtml}
+            `;
+            param.labels.forEach((al, idx) => {
+                actionMapHtml += `
+                    <div class="form-group">
+                        <label>${al}</label>
+                        <input type="number" id="w_am_${idx}" class="form-control widget-input action-map-input">
+                    </div>
+                `;
+            });
+            actionMapHtml += `</div>`;
+        }
+    });
+    
+    $("#params-form").html(html + actionMapHtml);
+    
+    // Bind toggle
+    $(".info-icon").on("click", function() {
+        $(this).parent().next(".param-description").toggleClass("show");
+    });
+}
+
+buildWidgets();
+
+const widgetIds = paramInfo.filter(p => p.type !== "array").map(p => p.id);
 
 function updateWidgetsFromJson() {
     try {
@@ -161,7 +214,8 @@ $("#params").on("input", function() {
     updateWidgetsFromJson();
 });
 
-$(".widget-input").on("input change", function() {
+// Since widgets are dynamically generated, use delegation or bind after build
+$("#params-form").on("input change", ".widget-input", function() {
     updateJsonFromWidgets();
 });
 

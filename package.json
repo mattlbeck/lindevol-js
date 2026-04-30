@@ -5,9 +5,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "webpack serve --config webpack.config.cjs",
     "build": "webpack --config webpack.config.cjs",
-    "start": "webpack-dev-server --open",
-    "test": "mocha \"./test/*.test.js\""
+    "test": "mocha test/**/*.test.js",
+    "docs": "node scripts/generate-docs.js"
   },
   "author": "Matthew Lloyd Beckers",
   "license": "ISC",
