@@ -37,9 +37,11 @@ self.onmessage = function(event) {
         killCellAt(msg.x, msg.y);
         pushFrame();
         break;
-    case "updateDisturbance":
-        simulation.params.disturbance_interval = msg.interval;
-        simulation.params.disturbance_strength = msg.strength;
+    case "updateDisplayParams":
+        if (simulation && simulation.params) {
+            simulation.params.steps_per_frame = msg.steps_per_frame;
+            simulation.params.record_interval = msg.record_interval;
+        }
         break;
     }
 };

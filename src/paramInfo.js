@@ -1,19 +1,5 @@
 export const paramInfo = [
     {
-        id: "steps_per_frame",
-        label: "Steps Per Frame",
-        type: "number",
-        attrs: { step: "1", min: "1" },
-        description: "The number of simulation steps to compute before drawing the frame to the screen. Increase this to uncap simulation speed."
-    },
-    {
-        id: "record_interval",
-        label: "Record Interval",
-        type: "number",
-        attrs: { step: "1", min: "1" },
-        description: "How often (in simulation steps) data metrics are recorded and charts are updated."
-    },
-    {
         id: "random_seed",
         label: "Random Seed",
         type: "number",

@@ -8,8 +8,6 @@ This document provides a comprehensive overview of the parameters that configure
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
-| **Steps Per Frame** (`steps_per_frame`) | `number` | The number of simulation steps to compute before drawing the frame to the screen. Increase this to uncap simulation speed. |
-| **Record Interval** (`record_interval`) | `number` | How often (in simulation steps) data metrics are recorded and charts are updated. |
 | **Random Seed** (`random_seed`) | `number` | Seed for the random number generator. Ensures reproducibility of simulations if all other parameters are identical. |
 | **World Width** (`world_width`) | `number` | Width of the simulation grid (in cells). Defines the horizontal space available for plants to grow and spread. |
 | **World Height** (`world_height`) | `number` | Height of the simulation grid (in cells). Defines the maximum vertical height a plant can grow towards the sunlight. |

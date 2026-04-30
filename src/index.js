@@ -184,6 +184,11 @@ $("#reload").on("click", function() {
     reloadSim();
 });
 
+$("#toggle-display").on("click", function() {
+    $("#display-content").toggleClass("hidden");
+    $(this).find(".toggle-icon").toggleClass("rotated");
+});
+
 $("#toggle-params").on("click", function() {
     $("#params-content").toggleClass("hidden");
     $(this).find(".toggle-icon").toggleClass("rotated");
@@ -195,18 +200,18 @@ $("#toggle-disturbance").on("click", function() {
     $(this).find(".toggle-icon").toggleClass("rotated");
 });
 
-$("#apply-disturbance").on("click", function() {
-    simWorker.postMessage({
-        type: "updateDisturbance",
-        interval: Number($("#d-interval").val()),
-        strength: Number($("#d-strength").val())
-    });
-});
-
 $("#disturb-now").on("click", function() {
     simWorker.postMessage({
         type: "disturb",
         strength: Number($("#d-strength").val())
+    });
+});
+
+$("#steps-per-frame, #record-interval").on("input change", function() {
+    simWorker.postMessage({
+        type: "updateDisplayParams",
+        steps_per_frame: Number($("#steps-per-frame").val()) || 1,
+        record_interval: Number($("#record-interval").val()) || 10
     });
 });
 
@@ -304,6 +309,8 @@ function updateWidgetsFromJson() {
         if (params.action_map && params.action_map.length === 6) {
             for (let i = 0; i < 6; i++) $(`#w_am_${i}`).val(params.action_map[i]);
         }
+        if (params.disturbance_interval !== undefined) $("#d-interval").val(params.disturbance_interval);
+        if (params.disturbance_strength !== undefined) $("#d-strength").val(params.disturbance_strength);
     } catch(e) { /* ignore invalid JSON */ }
 }
 
@@ -319,16 +326,18 @@ function updateJsonFromWidgets() {
         const action_map = [];
         for (let i = 0; i < 6; i++) action_map.push(Number($(`#w_am_${i}`).val()));
         params.action_map = action_map;
+        params.disturbance_interval = Number($("#d-interval").val());
+        params.disturbance_strength = Number($("#d-strength").val());
         $("#params").val(JSON.stringify(params, null, 4));
     } catch(e) { console.error(e); }
 }
 
 $("#params").on("input", function() { updateWidgetsFromJson(); });
 $("#params-form").on("input change", ".widget-input", function() { updateJsonFromWidgets(); });
+$("#d-interval, #d-strength").on("input change", function() { updateJsonFromWidgets(); });
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
 const params_p = new SimulationParams({
-    "steps_per_frame": 1,
     "world_width": 500,
     "initial_population": 500,
     "genome_interpreter": "promotor",
@@ -341,7 +350,9 @@ const params_p = new SimulationParams({
     "action_map": [32, 4, 4, 4, 4, 16],
     "death_factor": 0.32,
     "leanover_factor": 0.15,
-    "energy_exp": -2.5
+    "energy_exp": -2.5,
+    "disturbance_interval": 0,
+    "disturbance_strength": 0.1
 });
 
 $("#params").val(JSON.stringify(params_p, null, 4));
@@ -351,6 +362,8 @@ updateWidgetsFromJson();
 function reloadSim() {
     const params = JSON.parse($("#params").val());
     params.cellSize = cellSize;
+    params.steps_per_frame = Number($("#steps-per-frame").val()) || 1;
+    params.record_interval = Number($("#record-interval").val()) || 10;
     initCharts();
     simWorker.postMessage({ type: "init", params });
 }
