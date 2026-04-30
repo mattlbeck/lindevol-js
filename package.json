@@ -8,7 +8,8 @@
     "start": "webpack serve --config webpack.config.cjs",
     "build": "webpack --config webpack.config.cjs",
     "test": "mocha test/**/*.test.js",
-    "docs": "node scripts/generate-docs.js"
+    "docs": "node scripts/generate-docs.js",
+    "deploy": "gh-pages -d dist"
   },
   "author": "Matthew Lloyd Beckers",
   "license": "ISC",
@@ -25,6 +26,7 @@
     "chai": "^4.2.0",
     "eslint": "^5.8.0",
     "esm": "^3.2.25",
+    "gh-pages": "^6.3.0",
     "mocha": "^10.0.0",
     "tslint": "^5.11.0",
     "typescript": "^3.1.6",
