@@ -13,6 +13,24 @@ const canvas = document.querySelector("#mainbox");
 const ctx = canvas.getContext("2d");
 const cellSize = 8;
 
+let zoomLevel = 1.0;
+let fitScreen = false;
+
+function applyZoom() {
+    if (fitScreen) {
+        canvas.style.width = "100%";
+        canvas.style.height = "auto";
+    } else {
+        canvas.style.width = `${canvas.width * zoomLevel}px`;
+        canvas.style.height = `${canvas.height * zoomLevel}px`;
+    }
+}
+
+$("#zoom-out").on("click", function() { fitScreen = false; zoomLevel = Math.max(0.1, zoomLevel - 0.25); applyZoom(); });
+$("#zoom-in").on("click", function() { fitScreen = false; zoomLevel += 0.25; applyZoom(); });
+$("#zoom-reset").on("click", function() { fitScreen = false; zoomLevel = 1.0; applyZoom(); });
+$("#zoom-fit").on("click", function() { fitScreen = true; applyZoom(); });
+
 // ── Web Worker ────────────────────────────────────────────────────────────────
 const simWorker = new Worker(new URL('./simulation.worker.js', import.meta.url), { type: 'module' });
 
@@ -116,6 +134,8 @@ function renderFrame(msg) {
     const { buffer, width, height, cellCount, stepnum } = msg;
     canvas.width = width;
     canvas.height = height;
+    
+    applyZoom();
 
     const imageData = new ImageData(new Uint8ClampedArray(buffer), width, height);
     ctx.putImageData(imageData, 0, 0);
@@ -135,11 +155,13 @@ let selectedCell = null;
 canvas.addEventListener("click", function(event) {
     if (brushMode) return; // brush mode handles its own mouse events
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const physicalX = (event.clientX - rect.left) * scaleX;
+    const physicalY = (event.clientY - rect.top) * scaleY;
 
-    const cellx = Math.floor(x / cellSize);
-    const celly = Math.floor((canvas.height - y) / cellSize);
+    const cellx = Math.floor(physicalX / cellSize);
+    const celly = Math.floor((canvas.height - physicalY) / cellSize);
 
     selectedCell = [cellx, celly];
     simWorker.postMessage({ type: "getCell", x: cellx, y: celly });
@@ -239,10 +261,12 @@ canvas.addEventListener("mouseleave", function() { isPainting = false; });
 
 function erasePlantAt(event) {
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const cellx = Math.floor(x / cellSize);
-    const celly = Math.floor((canvas.height - y) / cellSize);
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const physicalX = (event.clientX - rect.left) * scaleX;
+    const physicalY = (event.clientY - rect.top) * scaleY;
+    const cellx = Math.floor(physicalX / cellSize);
+    const celly = Math.floor((canvas.height - physicalY) / cellSize);
     simWorker.postMessage({ type: "killCell", x: cellx, y: celly });
 }
 

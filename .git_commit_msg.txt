@@ -1,0 +1,7 @@
+feat: add CSS-based zoom and fit-to-screen controls
+
+- Added a zoom toolbar (Zoom In, Zoom Out, Reset, Fit Screen) above the simulation canvas in `index.html`.
+- Implemented `applyZoom()` in `src/index.js` to scale the canvas visually via CSS without altering the underlying web-worker pixel buffer.
+- Updated mouse coordinate projection math for cell info clicks and Brush Mode to correctly map scaled CSS coordinates back to physical grid space.
+
+Co-authored-by: Gemini 3.1 Pro (High)
