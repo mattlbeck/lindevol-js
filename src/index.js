@@ -432,18 +432,28 @@ $("#btn-import-genomes").on("click", function () {
     }
 
     // Check for action_map / interpreter mismatch
-    let mismatchWarning = "";
     if (bundleActionMap || bundleInterpreter) {
         const currentParams = JSON.parse($("#params").val());
         const amMismatch = bundleActionMap &&
             JSON.stringify(bundleActionMap) !== JSON.stringify(currentParams.action_map);
         const interpMismatch = bundleInterpreter &&
             bundleInterpreter !== currentParams.genome_interpreter;
+
         if (amMismatch || interpMismatch) {
             const details = [];
-            if (amMismatch) details.push(`action_map: [${bundleActionMap}] → [${currentParams.action_map}]`);
-            if (interpMismatch) details.push(`interpreter: ${bundleInterpreter} → ${currentParams.genome_interpreter}`);
-            mismatchWarning = `⚠️ Parameter mismatch:\n${details.join("\n")}\n\nThese genomes were evolved with different parameters. Import anyway? The bytes will be reinterpreted under the current action map.`;
+            if (amMismatch) details.push(`action_map: [${bundleActionMap}]`);
+            if (interpMismatch) details.push(`interpreter: ${bundleInterpreter}`);
+
+            const msg = `⚠️ Parameter mismatch detected.\n\nThe imported genomes use:\n${details.join("\n")}\n\nUpdate simulation parameters to match? (Otherwise, bytes will be reinterpreted under current settings)`;
+
+            if (confirm(msg)) {
+                const params = JSON.parse($("#params").val());
+                if (bundleActionMap) params.action_map = bundleActionMap;
+                if (bundleInterpreter) params.genome_interpreter = bundleInterpreter;
+                $("#params").val(JSON.stringify(params, null, 4));
+                updateWidgetsFromJson();
+                $("#genomes-status").text("Updated parameters to match imported genomes.");
+            }
         }
     }
 
@@ -461,12 +471,7 @@ $("#btn-import-genomes").on("click", function () {
         markParamsDirty();
     };
 
-    if (mismatchWarning) {
-        if (confirm(mismatchWarning)) proceed();
-        else $("#genomes-status").text("Import cancelled.");
-    } else {
-        proceed();
-    }
+    proceed();
 });
 
 $("#btn-copy-genomes").on("click", function () {
