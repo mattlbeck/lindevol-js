@@ -10,11 +10,11 @@ class Action{
         return 0;
     }
 
-    execute(cell){
+    execute(cell, stepnum){
         // actions are typically only carried out if the cell has energy
         // and the cell loses energy as a result.
         if (cell.energised){
-            var success = this.doAction(cell);
+            var success = this.doAction(cell, stepnum);
             cell.energised = !success;
         }
         
@@ -27,12 +27,12 @@ class Action{
 
 class Divide extends Action{
 
-    doAction(cell){
+    doAction(cell, stepnum){
         // the 2 least significant bits of the action code
         // determines which direction the divide action is for
-        super.doAction(cell);
+        super.doAction(cell, stepnum);
         var direction = this.getDirection();
-        cell.plant.growFromCell(cell, direction);
+        cell.plant.growFromCell(cell, direction, stepnum);
         return true;
     }
 
@@ -77,9 +77,9 @@ class MutateMinus extends Action{
 }
 
 class FlyingSeed extends Action{
-    doAction(cell){
-        super.doAction(cell);
-        return cell.plant.world.seed(cell.plant.genome.copy());
+    doAction(cell, stepnum){
+        super.doAction(cell, stepnum);
+        return cell.plant.world.seed(cell.plant.genome.copy(), null, stepnum);
     }
 
     toString(){
@@ -88,9 +88,9 @@ class FlyingSeed extends Action{
 }
 
 class LocalSeed extends Action{
-    doAction(cell){
-        super.doAction(cell);
-        return cell.plant.world.seed(cell.plant.genome.copy(), cell.x);
+    doAction(cell, stepnum){
+        super.doAction(cell, stepnum);
+        return cell.plant.world.seed(cell.plant.genome.copy(), cell.x, stepnum);
     }
 
     toString(){

@@ -3,7 +3,7 @@ import {Cell} from "./cell.js";
 import {NEIGHBOURHOOD} from "./actions.js";
 
 class Plant{
-    constructor(x, world, genome, useInternalState=false) {
+    constructor(x, world, genome, birthStep, useInternalState=false) {
         this.world = world;
         this.energisedCount = 0;
         this.cells = [new Cell(this, this.world.getX(x), 0)];
@@ -11,6 +11,7 @@ class Plant{
         this.useInternalState = useInternalState;
         this.rules = null; // cached rules
         this.leanoverEnergised = 0; // Incremental tracking
+        this.birthStep = birthStep;
     }
 
     getNeighbourhood(cell){
@@ -56,7 +57,7 @@ class Plant{
      * @param {*} cell the cell to grow from
      * @param {*} direction the direction to grow in
      */
-    growFromCell(cell, direction){
+    growFromCell(cell, direction, stepnum){
         var x = cell.x+direction[0], y = cell.y+direction[1];
         // check if space is clear
         var space = this.world.getCell(x, y);
@@ -67,6 +68,10 @@ class Plant{
             if (space.plant === this){
                 return;
             }
+            
+            // Attack occurs
+            if (this.world.onAttack) this.world.onAttack();
+
             // this plant will kill the other
             // with a probability...
             if(randomProb(space.plant.getKillProbability())){

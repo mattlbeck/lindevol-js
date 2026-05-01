@@ -62,11 +62,13 @@ let charts = {};
 
 function initCharts() {
     Object.values(charts).forEach(c => c.destroy());
+    charts = {};
 
     const commonOptions = {
         responsive: true,
+        maintainAspectRatio: false,
         animation: false,
-        elements: { point: { radius: 0 }, line: { borderWidth: 2 } },
+        elements: { point: { radius: 0 }, line: { borderWidth: 1 } },
         scales: { x: { display: true }, y: { display: true } },
         plugins: { legend: { display: true, position: 'top' } }
     };
@@ -76,10 +78,66 @@ function initCharts() {
         data: {
             labels: [], datasets: [
                 { label: 'Plants', data: [], borderColor: '#8dc63f', backgroundColor: 'rgba(141, 198, 63, 0.1)' },
-                { label: 'Total Cells', data: [], borderColor: '#a78bfa', backgroundColor: 'rgba(167, 139, 250, 0.1)' },
-                { label: 'Energised Cells', data: [], borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.1)' }
+                { label: 'Unique Genotypes', data: [], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)' }
             ]
         },
+        options: commonOptions
+    });
+
+    charts.avgSizeEnergy = new Chart(document.getElementById('chart-avg-size-energy'), {
+        type: 'line',
+        data: {
+            labels: [], datasets: [
+                { label: 'Avg Size', data: [], borderColor: '#a78bfa' },
+                { label: 'Avg Energized', data: [], borderColor: '#fbbf24' }
+            ]
+        },
+        options: commonOptions
+    });
+
+    charts.activeGenes = new Chart(document.getElementById('chart-active-genes'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Avg Active Genes', data: [], borderColor: '#f472b6' }] },
+        options: commonOptions
+    });
+
+    charts.avgAge = new Chart(document.getElementById('chart-avg-age'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Avg Age', data: [], borderColor: '#fb923c' }] },
+        options: commonOptions
+    });
+
+    charts.seeds = new Chart(document.getElementById('chart-seeds'), {
+        type: 'line',
+        data: {
+            labels: [], datasets: [
+                { label: 'Total Seeds', data: [], borderColor: '#2dd4bf' },
+                { label: 'Flying Seeds', data: [], borderColor: '#c084fc' }
+            ]
+        },
+        options: commonOptions
+    });
+
+    charts.birthDeath = new Chart(document.getElementById('chart-birth-death'), {
+        type: 'line',
+        data: {
+            labels: [], datasets: [
+                { label: 'New Plants', data: [], borderColor: '#8dc63f' },
+                { label: 'Deaths', data: [], borderColor: '#ef4444' }
+            ]
+        },
+        options: commonOptions
+    });
+
+    charts.attacks = new Chart(document.getElementById('chart-attacks'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Attacks', data: [], borderColor: '#f87171' }] },
+        options: commonOptions
+    });
+
+    charts.deathProb = new Chart(document.getElementById('chart-death-prob'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Avg Death Prob', data: [], borderColor: '#94a3b8' }] },
         options: commonOptions
     });
 
@@ -125,9 +183,39 @@ function updateCharts(data, stepnum) {
 
     charts.population.data.labels = steps;
     charts.population.data.datasets[0].data = data["population"];
-    charts.population.data.datasets[1].data = data["total_cells"];
-    charts.population.data.datasets[2].data = data["energised_cells"];
+    charts.population.data.datasets[1].data = data["unique_genotypes"];
     charts.population.update();
+
+    charts.avgSizeEnergy.data.labels = steps;
+    charts.avgSizeEnergy.data.datasets[0].data = data["avg_size"];
+    charts.avgSizeEnergy.data.datasets[1].data = data["avg_energised"];
+    charts.avgSizeEnergy.update();
+
+    charts.activeGenes.data.labels = steps;
+    charts.activeGenes.data.datasets[0].data = data["avg_active_genes"];
+    charts.activeGenes.update();
+
+    charts.avgAge.data.labels = steps;
+    charts.avgAge.data.datasets[0].data = data["avg_age"];
+    charts.avgAge.update();
+
+    charts.seeds.data.labels = steps;
+    charts.seeds.data.datasets[0].data = data["total_seeds"];
+    charts.seeds.data.datasets[1].data = data["flying_seeds"];
+    charts.seeds.update();
+
+    charts.birthDeath.data.labels = steps;
+    charts.birthDeath.data.datasets[0].data = data["new_plants"];
+    charts.birthDeath.data.datasets[1].data = data["deaths"];
+    charts.birthDeath.update();
+
+    charts.attacks.data.labels = steps;
+    charts.attacks.data.datasets[0].data = data["attacks"];
+    charts.attacks.update();
+
+    charts.deathProb.data.labels = steps;
+    charts.deathProb.data.datasets[0].data = data["avg_death_prob"];
+    charts.deathProb.update();
 
     charts.plantSize.data.labels = steps;
     charts.plantSize.data.datasets[0].data = data["plant_size_mean"];

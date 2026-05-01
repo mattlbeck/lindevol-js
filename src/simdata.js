@@ -54,11 +54,49 @@ class SimData{
             new Collector("population", AsIs, function(sim){
                 return sim.world.plants.length;
             }),
-            new Collector("total_cells", AsIs, function(sim){
-                return sim.world.plants.reduce((sum, p) => sum + p.cells.length, 0);
+            new Collector("unique_genotypes", AsIs, function(sim){
+                const seen = new Set();
+                sim.world.plants.forEach(p => seen.add(p.genome.serialize()));
+                return seen.size;
             }),
-            new Collector("energised_cells", AsIs, function(sim){
-                return sim.world.plants.reduce((sum, p) => sum + p.cells.filter(c => c.energised).length, 0);
+            new Collector("total_cells", AsIs, function(sim){
+                return sim.world.cellCount;
+            }),
+            new Collector("avg_size", AsIs, function(sim){
+                if (sim.world.plants.length === 0) return 0;
+                return sim.world.cellCount / sim.world.plants.length;
+            }),
+            new Collector("avg_energised", AsIs, function(sim){
+                if (sim.world.plants.length === 0) return 0;
+                const total = sim.world.plants.reduce((sum, p) => sum + p.energisedCount, 0);
+                return total / sim.world.plants.length;
+            }),
+            new Collector("avg_active_genes", AsIs, function(sim){
+                if (sim.world.plants.length === 0) return 0;
+                const total = sim.world.plants.reduce((sum, p) => sum + (p.rules ? p.rules.length : 0), 0);
+                return total / sim.world.plants.length;
+            }),
+            new Collector("avg_age", AsIs, function(sim){
+                if (sim.world.plants.length === 0) return 0;
+                const total = sim.world.plants.reduce((sum, p) => sum + (sim.stepnum - p.birthStep), 0);
+                return total / sim.world.plants.length;
+            }),
+            new Collector("total_seeds", AsIs, function(sim){ return sim.stats.totalSeeds; }),
+            new Collector("flying_seeds", AsIs, function(sim){ return sim.stats.flyingSeeds; }),
+            new Collector("new_plants", AsIs, function(sim){ return sim.stats.newPlants; }),
+            new Collector("deaths", AsIs, function(sim){ return sim.stats.deaths; }),
+            new Collector("attacks", AsIs, function(sim){ return sim.stats.attacks; }),
+            new Collector("avg_death_prob", AsIs, function(sim){
+                if (sim.world.plants.length === 0) return 0;
+                const total = sim.world.plants.reduce((sum, p) => {
+                    return sum + p.getDeathProbability(
+                        sim.params.death_factor,
+                        sim.params.natural_exp,
+                        sim.params.energy_exp,
+                        sim.params.leanover_factor
+                    ).prob;
+                }, 0);
+                return total / sim.world.plants.length;
             }),
             new Collector("plant_size_", Summary, function(sim){
                 if (sim.world.plants.length === 0) return [0];
@@ -75,7 +113,9 @@ class SimData{
             new Collector("plant_height_", Summary, function(sim){
                 if (sim.world.plants.length === 0) return [0];
                 return sim.world.plants.map(p => {
-                    return Math.max(...p.cells.map(c => c.y));
+                    let maxH = 0;
+                    for (let i = 0; i < p.cells.length; i++) if (p.cells[i].y > maxH) maxH = p.cells[i].y;
+                    return maxH;
                 });
             }),
             new Collector("genetic_distance_mean", AsIs, function(sim) {
@@ -109,6 +149,13 @@ class SimData{
             var values = c.collect(this.sim);
             Object.assign(stepData, values);
         }, this);
+
+        // Reset incremental stats for the next interval
+        this.sim.stats.newPlants = 0;
+        this.sim.stats.deaths = 0;
+        this.sim.stats.attacks = 0;
+        this.sim.stats.totalSeeds = 0;
+        this.sim.stats.flyingSeeds = 0;
 
         this.data["stepnum"].push(this.sim.stepnum);
         if (this.data["stepnum"].length > SimData.MAX_DATA_POINTS) {

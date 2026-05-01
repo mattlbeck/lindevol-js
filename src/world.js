@@ -18,6 +18,10 @@ class World {
 
         this.plants = [];
         this.cellCount = 0;
+
+        this.onPlantBirth = null;
+        this.onPlantDeath = null;
+        this.onAttack = null;
     }
 
     /**
@@ -42,14 +46,14 @@ class World {
      * @return true if a seed was succesfully planted, false if
      * there was no space to sow a seed.
      */
-    seed(genome, nearX){
+    seed(genome, nearX, stepnum){
         // find a random empty space
         var emptySpaces = this.getFloorSpace();
         if(emptySpaces.length === 0){
             return false;
         }
 
-        if(nearX !== undefined){
+        if(nearX !== undefined && nearX !== null){
             var nearestX = null;
             var nearest_diff = this.width;
             emptySpaces.forEach(function(xpos){
@@ -59,7 +63,7 @@ class World {
                     nearestX = xpos;
                 }
             });
-            this.sowPlant(genome, nearestX);
+            this.sowPlant(genome, nearestX, stepnum);
             return true;
         }
 
@@ -67,15 +71,16 @@ class World {
         if (this.cells[x][0] !== null){
             throw new Error("Space is taken");
         }
-        this.sowPlant(genome, x);
+        this.sowPlant(genome, x, stepnum);
         return true;
     }
 
-    sowPlant(genome, x){
+    sowPlant(genome, x, stepnum){
         x = this.getX(x);
-        var plant = new Plant(x, this, genome);
+        var plant = new Plant(x, this, genome, stepnum);
         this.plants.push(plant);
         this.addCell(plant.cells[0]);
+        if (this.onPlantBirth) this.onPlantBirth(plant);
     }
 
     /**
@@ -91,6 +96,7 @@ class World {
                 const cell = plant.cells[i];
                 this.cells[cell.x][cell.y] = null;
             }
+            if (this.onPlantDeath) this.onPlantDeath(plant);
         }
     }
 

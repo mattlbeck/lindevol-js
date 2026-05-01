@@ -57,6 +57,17 @@ class Simulation {
             this.mut_units = 2;
         }
         this.stepnum = 0;
+        this.stats = { 
+            attacks: 0, 
+            deaths: 0, 
+            totalSeeds: 0, 
+            flyingSeeds: 0, 
+            newPlants: 0 
+        };
+
+        this.world.onPlantBirth = () => { this.stats.newPlants++; };
+        this.world.onPlantDeath = () => { this.stats.deaths++; };
+        this.world.onAttack = () => { this.stats.attacks++; };
     }
 
     getInterpreter(){
@@ -86,14 +97,14 @@ class Simulation {
         for (var i=0; i<this.params.initial_population; i++){
             const str = serializedGenomes[Math.floor(Math.random() * serializedGenomes.length)];
             const genome = ByteArray.deserialize(str);
-            this.world.seed(genome);
+            this.world.seed(genome, null, this.stepnum);
         }
     }
 
     newSeed(){
         // create a random genome
         var genome = ByteArray.random(this.params.initial_genome_length);
-        this.world.seed(genome);
+        this.world.seed(genome, null, this.stepnum);
     }
 
     step(){
@@ -125,11 +136,16 @@ class Simulation {
         else if(this.genomeInterpreter instanceof PromotorInterpreter){
             state = cell.plant.getState(cell);
         }
+        const self = this;
         rules.forEach(function(rule){
             // execute one action using the first matching rule
-            // if (rule.matches(state)){
             if (rule.matches(state)){
-                rule.action.execute(cell);
+                // Track seeds
+                if (rule.action.constructor.name === "FlyingSeed") self.stats.flyingSeeds++;
+                if (rule.action.constructor.name === "FlyingSeed" || rule.action.constructor.name === "LocalSeed") {
+                    self.stats.totalSeeds++;
+                }
+                rule.action.execute(cell, self.stepnum);
             }
         }, this);
         cell.updateState();
