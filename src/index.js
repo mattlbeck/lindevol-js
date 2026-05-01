@@ -101,6 +101,18 @@ function initCharts() {
         data: { labels: [], datasets: [{ label: 'Mean Mut Exp', data: [], borderColor: '#c084fc' }]},
         options: commonOptions
     });
+
+    charts.geneticDistance = new Chart(document.getElementById('chart-genetic-distance'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Mean Pairwise Distance', data: [], borderColor: '#facc15' }]},
+        options: commonOptions
+    });
+
+    charts.alleleEntropy = new Chart(document.getElementById('chart-allele-entropy'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Shannon Entropy (Bits)', data: [], borderColor: '#2dd4bf' }]},
+        options: commonOptions
+    });
 }
 
 function updateCharts(data, stepnum) {
@@ -127,6 +139,14 @@ function updateCharts(data, stepnum) {
     charts.mutExp.data.labels = steps;
     charts.mutExp.data.datasets[0].data = data["mut_exp_mean"];
     charts.mutExp.update();
+
+    charts.geneticDistance.data.labels = steps;
+    charts.geneticDistance.data.datasets[0].data = data["genetic_distance_mean"];
+    charts.geneticDistance.update();
+
+    charts.alleleEntropy.data.labels = steps;
+    charts.alleleEntropy.data.datasets[0].data = data["allele_entropy"];
+    charts.alleleEntropy.update();
 }
 
 // ── Rendering ─────────────────────────────────────────────────────────────────

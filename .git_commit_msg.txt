@@ -1,8 +1,8 @@
-fix: rate-limit telemetry updates to prevent UI freezing
+feat: implement genetic diversity telemetry and technical documentation
 
-- Abstracted the `self.postMessage` telemetry dispatch into a `pushStats()` function inside `simulation.worker.js`.
-- Moved `pushStats()` out of the high-frequency `doStep()` loop and synced it with the `pushFrame()` timing logic (capped at ~60 FPS).
-- The worker still records data points at the user's defined `record_interval`, but buffers the data to prevent flooding the main thread's message queue.
-- This ensures the UI (specifically the "Stop" button) remains fully responsive even when running thousands of steps per frame.
+- Added `levenshtein` distance and `calculateAlleleEntropy` helper functions to `simdata.js`.
+- Integrated `"genetic_distance_mean"` and `"allele_entropy"` Collectors into `SimData` to sample diversity at every record interval.
+- Added new Chart.js canvases to `dist/index.html` and initialized them in `src/index.js` to render live telemetry of structural divergence and allele richness.
+- Created `TECHNICAL.md` to formally document the intuition, mathematical boundaries, and biological insights behind these metrics.
 
 Co-authored-by: Gemini 3.1 Pro (High)

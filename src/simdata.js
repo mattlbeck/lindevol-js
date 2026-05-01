@@ -1,5 +1,50 @@
 import * as stats from "stats-lite";
 
+function levenshtein(a, b) {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    let matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b[i - 1] === a[j - 1]) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // substitution
+                    Math.min(
+                        matrix[i][j - 1] + 1, // insertion
+                        matrix[i - 1][j] + 1  // deletion
+                    )
+                );
+            }
+        }
+    }
+    return matrix[b.length][a.length];
+}
+
+function calculateAlleleEntropy(plants) {
+    if (plants.length === 0) return 0;
+    const counts = new Array(256).fill(0);
+    let total = 0;
+    plants.forEach(p => {
+        for (let i = 0; i < p.genome.length; i++) {
+            counts[p.genome[i]]++;
+            total++;
+        }
+    });
+    if (total === 0) return 0;
+    let entropy = 0;
+    for (let i = 0; i < 256; i++) {
+        if (counts[i] > 0) {
+            const p = counts[i] / total;
+            entropy -= p * Math.log2(p);
+        }
+    }
+    return entropy;
+}
+
 class SimData{
 
     constructor(simulation){
@@ -32,6 +77,25 @@ class SimData{
                 return sim.world.plants.map(p => {
                     return Math.max(...p.cells.map(c => c.y));
                 });
+            }),
+            new Collector("genetic_distance_mean", AsIs, function(sim) {
+                const plants = sim.world.plants;
+                if (plants.length < 2) return 0;
+                let sumDist = 0;
+                let sampleSize = Math.min(30, plants.length);
+                let pairs = 0;
+                for (let i = 0; i < sampleSize; i++) {
+                    const p1 = plants[Math.floor(Math.random() * plants.length)];
+                    const p2 = plants[Math.floor(Math.random() * plants.length)];
+                    if (p1 !== p2) {
+                        sumDist += levenshtein(p1.genome, p2.genome);
+                        pairs++;
+                    }
+                }
+                return pairs > 0 ? sumDist / pairs : 0;
+            }),
+            new Collector("allele_entropy", AsIs, function(sim) {
+                return calculateAlleleEntropy(sim.world.plants);
             })
         ];
     }
