@@ -1,29 +1,12 @@
-fix/feat: fix mut_exp inheritance bug and implement genome import/export
+fix: cap telemetry data to prevent OOM crash on long runs
 
-Bug Fix:
-- Fixed a long-standing bug in `ByteArray.copy()` where offspring inherited
-  `this.initial_mut_exp` (undefined) instead of `this.mut_exp`, meaning the
-  `mut+` and `mut-` actions had no lasting evolutionary effect across generations.
+After running for extended periods, the SimData arrays grew without bound,
+eventually causing `Array buffer allocation failed` in the worker when
+allocating the next pixel buffer frame.
 
-New Features:
-- Added `ByteArray.serialize()` and `ByteArray.deserialize()` for round-trip
-  genome encoding as `"<mut_exp>;<byte0>,<byte1>,..."` strings, preserving
-  both the genetic sequence and the evolved mutation rate.
-- Added `Simulation.init_population_from_genomes(serializedGenomes[])` to seed
-  a new world from an imported genome list (drawn with replacement).
-- Extended the simulation worker with an `export` message type that collects
-  all unique serialized genomes from living plants and returns them.
-- Added a 🧬 Genomes UI panel to `dist/index.html` with an Export button,
-  an Import & Reload button, and a clipboard copy button.
-
-Tests:
-- Added 6 new unit tests in `test/genome.test.js` covering:
-  - `mut_exp` is correctly inherited by offspring via `copy()`
-  - Child's `mut_exp` changes do not affect the parent
-  - Byte contents are preserved through `copy()`
-  - `serialize()`/`deserialize()` round-trip preserves bytes and `mut_exp`
-  - Serialization format verification
-
-All 56 tests passing.
+Added a rolling window cap of 2000 data points per series in `SimData.recordStep()`.
+When the limit is exceeded the oldest entry is shifted off, keeping memory usage
+stable across arbitrarily long simulation runs. Charts now display a sliding
+window of recent history rather than the entire run.
 
 Co-authored-by: Claude Sonnet 4.6 (Thinking)

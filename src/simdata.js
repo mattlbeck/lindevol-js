@@ -111,14 +111,21 @@ class SimData{
         }, this);
 
         this.data["stepnum"].push(this.sim.stepnum);
+        if (this.data["stepnum"].length > SimData.MAX_DATA_POINTS) {
+            this.data["stepnum"].shift();
+        }
         Object.keys(stepData).forEach(function(k){
             if (!(k in this.data)){
                 this.data[k] = [];
             }
-            this.data[k].push(stepData[k]); 
+            this.data[k].push(stepData[k]);
+            if (this.data[k].length > SimData.MAX_DATA_POINTS) {
+                this.data[k].shift();
+            }
         }, this);
     }
 }
+SimData.MAX_DATA_POINTS = 2000;
 
 class Collector{
     constructor(name, typecls, collectFunc){
