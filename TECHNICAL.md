@@ -1,5 +1,88 @@
 # Technical Information
 
+## Simulation Parameters & Core Equations
+
+The LindEvol engine uses several configurable parameters (defined in the JSON Configuration) to govern the lifecycle of plants and their genetic mutation rates. Below are the core equations and the parameters that drive them.
+
+### Plant Lifecycle & Death Probability
+
+Every simulation step, a plant evaluates its probability of dying. The death probability $P(\text{death})$ is calculated based on its physical size, its energy reserves, and how structurally unbalanced (leaning) it is.
+
+**Equation:**
+$$P(\text{death}) = D_f \times N^{N_{exp}} \times (E + 1)^{E_{exp}} + L_f \times \text{LeanTerm}$$
+
+**Parameters:**
+- $D_f$ (`death_factor`): The base multiplier for death probability.
+- $N_{exp}$ (`natural_exp`): The exponent applied to the total number of cells ($N$) in the plant. A higher exponent aggressively penalizes larger plants.
+- $E_{exp}$ (`energy_exp`): The exponent applied to the number of energised cells ($E$). Because this value is typically negative, more energy *reduces* the death probability.
+- $L_f$ (`leanover_factor`): A multiplier penalizing unbalanced growth.
+
+*Note on LeanTerm:* The `LeanTerm` is an internal calculation representing the physical torque on the plant. It scales with the number of cells (specifically $2 / (N(N-1))$) and the horizontal distance of each cell from the root.
+
+### Competition & Killing Probability
+
+When a plant attempts to grow into a space already occupied by another plant's cell, an attack occurs. 
+
+**Equation:**
+$$P(\text{kill}) = \frac{1}{E_{\text{target}}}$$
+
+**Parameters/Variables:**
+- $E_{\text{target}}$: The number of energised cells possessed by the defending plant. The more energy the defender has, the lower the probability the attacker succeeds in killing it. If the defender has 0 energy, the attacker's success is guaranteed (evaluates to Infinity mathematically, capped to 1.0 probability).
+
+### Genetic Mutations
+
+When a seed is spawned, its genome is subjected to potential mutations. The probability of any specific mutation event (replacement, insertion, or deletion) depends on the base probabilities defined in the config, scaled by the plant's inherited mutation exponent.
+
+**Equation:**
+$$P(\text{event}) = p_{\text{event}} \times (\text{mut\_prob})^{\text{mut\_exp}}$$
+
+**Parameters:**
+- $p_{\text{event}}$: The base probability of the specific event type (`mut_replace`, `mut_insert`, or `mut_delete`).
+- `mut_prob`: The global base modifier for mutation scaling.
+- `mut_exp`: An inherited, evolvable trait specific to the individual genome. It acts as the exponent to `mut_prob`. A higher `mut_exp` (when `mut_prob` < 1) exponentially decreases the overall probability of a mutation occurring.
+
+*Note:* If an event occurs, `mut_units` determines how many bytes are inserted or deleted in a single event.
+
+## Genomic Interpreters, States, and Actions
+
+In LindEvol, a plant's genome is a raw sequence of bytes. How these bytes translate into behaviors depends on the **Genomic Interpreter**, which reads the genome and compiles it into a set of conditional `Rules`. Each rule pairs an environmental **State** condition with a corresponding **Action**.
+
+### Genomic Interpreters
+
+There are currently two ways to compile a genome into rules:
+
+1. **Block Interpreter (`"block"`):**
+   A simpler, rigid interpreter. It reads the genome in two-byte chunks (blocks). 
+   - The first byte defines the exact **state** condition.
+   - The second byte defines the **action** to take if that state is met.
+   - Every state bit must match exactly for the rule to trigger (an equality mask of 255).
+
+2. **Promotor/Terminator Interpreter (`"promotor"`):**
+   A biologically inspired interpreter that mimics gene transcription.
+   - It scans the genome for a specific byte signature denoting a **Promotor** (start codon).
+   - Once a promotor is found, it reads subsequent "operator" bytes to construct a state matching mask. This allows for partial matching (e.g., "if there is light, regardless of neighbours").
+   - Transcription stops when it hits a **Terminator** byte signature. The terminator byte determines the action.
+
+### States
+
+When evaluating rules, a plant assesses its environment and constructs a 16-bit state integer for each of its cells. This state comprises:
+- **Bits 0–7 (Neighbourhood):** An 8-bit mask representing the 8 adjacent spaces around the cell. A `1` means the space is occupied.
+- **Bits 8–14 (Internal State):** An arbitrary internal memory space that the plant can read from and write to (via `StateBitN` actions).
+- **Bit 15 (Energised):** A `1` indicates the cell currently possesses sunlight energy.
+
+### Actions
+
+If a rule's state condition matches the cell's current state, the corresponding action is executed. Actions generally consume the cell's energy.
+
+The translation of a byte to an action is handled by the **Action Map**. The configuration defines weights (e.g., `action_map: [200, 20, 0, 18, 18, 0]`) that partition the 0–255 byte range into sections corresponding to specific actions:
+
+1. **`Divide`**: Grows the plant by spawning a new cell in an adjacent space. The 3 least significant bits of the action byte dictate the direction (0–7).
+2. **`FlyingSeed`**: Disperses a copy of the plant's genome into the world, spawning a new plant at a random location.
+3. **`LocalSeed`**: Drops a seed directly adjacent to the plant.
+4. **`MutatePlus` (`mut+`)**: Increases the genome's mutation exponent, making future genetic mutations *less* likely (increasing stability).
+5. **`MutateMinus` (`mut-`)**: Decreases the mutation exponent, making future genetic mutations *more* likely (increasing adaptability/chaos).
+6. **`StateBitN`**: Toggles a bit within the cell's internal state memory. The 4 least significant bits dictate which bit to flip. This does not consume energy.
+
 ## Measuring Diversity
 
 To understand the evolutionary dynamics of the LindEvol simulation, we track two complementary measures of genetic diversity. By monitoring both simultaneously, we can differentiate between populations that are structurally identical but functionally rich, versus those that are structurally chaotic but functionally impoverished.

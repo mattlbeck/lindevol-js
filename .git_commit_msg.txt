@@ -1,8 +1,7 @@
-feat: implement genetic diversity telemetry and technical documentation
+docs: expand technical guide with core equations and genomic mechanics
 
-- Added `levenshtein` distance and `calculateAlleleEntropy` helper functions to `simdata.js`.
-- Integrated `"genetic_distance_mean"` and `"allele_entropy"` Collectors into `SimData` to sample diversity at every record interval.
-- Added new Chart.js canvases to `dist/index.html` and initialized them in `src/index.js` to render live telemetry of structural divergence and allele richness.
-- Created `TECHNICAL.md` to formally document the intuition, mathematical boundaries, and biological insights behind these metrics.
+- Added a "Simulation Parameters & Core Equations" section detailing the mathematical models behind plant lifecycles, death probabilities, inter-plant competition (kill probabilities), and the mutation probability scaling.
+- Added a "Genomic Interpreters, States, and Actions" section documenting the structural differences between the `block` and `promotor` interpreters.
+- Documented the exact bitwise mapping of a cell's 16-bit environmental state and the 6 corresponding actions dictated by the `action_map`.
 
 Co-authored-by: Gemini 3.1 Pro (High)
