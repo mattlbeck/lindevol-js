@@ -8,12 +8,31 @@ class ByteArray extends Array{
         this.mut_exp = initial_mut_exp;
     }
 
-    static from(arr){
-        var ba = new ByteArray(arr.length);
+    static from(arr, mut_exp=0){
+        var ba = new ByteArray(arr.length, mut_exp);
         for(var i=0; i<ba.length;i++){
             ba[i] = arr[i];
         }
         return ba;
+    }
+
+    /**
+     * Serialize this genome to a string: "<mut_exp>;<byte0>,<byte1>,..."
+     */
+    serialize(){
+        return `${this.mut_exp};${Array.from(this).join(",")}`;
+    }
+
+    /**
+     * Deserialize a genome string produced by serialize().
+     * @param {string} str
+     * @returns {ByteArray}
+     */
+    static deserialize(str){
+        const parts = str.trim().split(";");
+        const mut_exp = parseFloat(parts[0]);
+        const bytes = parts[1].split(",").map(Number);
+        return ByteArray.from(bytes, mut_exp);
     }
 
     static random(length){
@@ -25,7 +44,7 @@ class ByteArray extends Array{
     }
 
     copy(){
-        var newArr = new ByteArray(this.length, this.initial_mut_exp);
+        var newArr = new ByteArray(this.length, this.mut_exp);
         for(var i=0; i<this.length; i++){
             newArr[i] = this[i];
         }

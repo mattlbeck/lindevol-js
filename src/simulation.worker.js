@@ -13,7 +13,7 @@ self.onmessage = function(event) {
     const msg = event.data;
     switch (msg.type) {
     case "init":
-        initSim(msg.params);
+        initSim(msg.params, msg.genomes || null);
         break;
     case "start":
         running = true;
@@ -44,16 +44,23 @@ self.onmessage = function(event) {
             simulation.params.record_interval = msg.record_interval;
         }
         break;
+    case "export":
+        exportGenomes();
+        break;
     }
 };
 
-function initSim(params) {
+function initSim(params, importedGenomes=null) {
     running = false;
     const sim_params = new SimulationParams(params);
     cellSize = params.cellSize || 8;
     simulation = new Simulation(sim_params);
     data = new SimData(simulation);
-    simulation.init_population();
+    if (importedGenomes && importedGenomes.length > 0) {
+        simulation.init_population_from_genomes(importedGenomes);
+    } else {
+        simulation.init_population();
+    }
     pushFrame();
     pushStats();
 }
@@ -119,6 +126,15 @@ function killCellAt(x, y) {
     if (cell && cell.plant) {
         simulation.world.killPlant(cell.plant);
     }
+}
+
+function exportGenomes() {
+    const seen = new Set();
+    simulation.world.plants.forEach(plant => {
+        seen.add(plant.genome.serialize());
+    });
+    const genomes = Array.from(seen);
+    self.postMessage({ type: "exportedGenomes", genomes });
 }
 
 function pushFrame() {

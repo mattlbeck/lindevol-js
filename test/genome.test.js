@@ -5,6 +5,59 @@ const expect = chai.expect;
 
 import {ByteArray, BlockInterpreter, PromotorInterpreter} from "../src/genome.js";
 import {Divide} from "../src/actions.js";
+
+describe("ByteArray mut_exp inheritance", function(){
+    it("copy() inherits mut_exp from parent", function(){
+        const parent = ByteArray.from([10, 20, 30]);
+        parent.mut_exp = 2.5;
+        const child = parent.copy();
+        child.mut_exp.should.equal(2.5);
+    });
+
+    it("copy() increments to parent mut_exp independently", function(){
+        const parent = ByteArray.from([10, 20, 30]);
+        parent.mut_exp = 1.0;
+        const child = parent.copy();
+        child.mut_exp += 0.5;
+        parent.mut_exp.should.equal(1.0); // parent unchanged
+        child.mut_exp.should.equal(1.5);
+    });
+
+    it("copy() preserves byte contents", function(){
+        const parent = ByteArray.from([1, 2, 3, 4]);
+        parent.mut_exp = 0.8;
+        const child = parent.copy();
+        for(let i = 0; i < parent.length; i++){
+            child[i].should.equal(parent[i]);
+        }
+    });
+});
+
+describe("ByteArray serialization", function(){
+    it("serialize and deserialize round-trip preserves bytes", function(){
+        const original = ByteArray.from([0, 14, 255, 128]);
+        original.mut_exp = 0;
+        const str = original.serialize();
+        const restored = ByteArray.deserialize(str);
+        for(let i = 0; i < original.length; i++){
+            restored[i].should.equal(original[i]);
+        }
+    });
+
+    it("serialize and deserialize round-trip preserves mut_exp", function(){
+        const original = ByteArray.from([10, 20, 30]);
+        original.mut_exp = 3.75;
+        const str = original.serialize();
+        const restored = ByteArray.deserialize(str);
+        restored.mut_exp.should.equal(3.75);
+    });
+
+    it("serialize format is '<mut_exp>;<csv bytes>'", function(){
+        const ba = ByteArray.from([1, 2, 3]);
+        ba.mut_exp = 0;
+        ba.serialize().should.equal("0;1,2,3");
+    });
+});
 describe("Byte array", function(){
     describe("When init with 1, 2, 4, 8, 16, 32, 64, and 128", function(){
         // create the vals dynamically

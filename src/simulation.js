@@ -77,6 +77,19 @@ class Simulation {
         }
     }
 
+    /**
+     * Initialise the population from a list of serialized genome strings,
+     * drawing with replacement up to initial_population.
+     * @param {string[]} serializedGenomes
+     */
+    init_population_from_genomes(serializedGenomes){
+        for (var i=0; i<this.params.initial_population; i++){
+            const str = serializedGenomes[Math.floor(Math.random() * serializedGenomes.length)];
+            const genome = ByteArray.deserialize(str);
+            this.world.seed(genome);
+        }
+    }
+
     newSeed(){
         // create a random genome
         var genome = ByteArray.random(this.params.initial_genome_length);

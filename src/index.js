@@ -47,6 +47,9 @@ simWorker.onmessage = function(event) {
     case "cellInfo":
         renderCellInfo(msg);
         break;
+    case "exportedGenomes":
+        handleExportedGenomes(msg.genomes);
+        break;
     }
 };
 
@@ -254,6 +257,53 @@ $("#steps-per-frame, #record-interval").on("input change", function() {
         type: "updateDisplayParams",
         steps_per_frame: Number($("#steps-per-frame").val()) || 1,
         record_interval: Number($("#record-interval").val()) || 10
+    });
+});
+
+// ── Genome panel ──────────────────────────────────────────────────────────────
+$("#toggle-genomes").on("click", function() {
+    const content = $("#genomes-content");
+    const isHidden = content.css("display") === "none";
+    content.css("display", isHidden ? "block" : "none");
+    $(this).find(".toggle-icon").text(isHidden ? "▼" : "▶");
+});
+
+$("#btn-export-genomes").on("click", function() {
+    $("#genomes-status").text("Exporting...");
+    simWorker.postMessage({ type: "export" });
+});
+
+function handleExportedGenomes(genomes) {
+    $("#genome-textarea").val(genomes.join("\n"));
+    $("#genomes-status").text(`Exported ${genomes.length} unique genome${genomes.length === 1 ? "" : "s"}.`);
+}
+
+$("#btn-import-genomes").on("click", function() {
+    const lines = $("#genome-textarea").val().split("\n").map(s => s.trim()).filter(s => s.length > 0);
+    if (lines.length === 0) {
+        $("#genomes-status").text("No genomes to import.");
+        return;
+    }
+    if (run) {
+        run = false;
+        $("#run").text("Run").removeClass("btn-danger").addClass("btn-success");
+        simWorker.postMessage({ type: "stop" });
+    }
+    $("#genomes-status").text(`Seeding simulation with ${lines.length} genome${lines.length === 1 ? "" : "s"}...`);
+    const params = JSON.parse($("#params").val());
+    params.cellSize = cellSize;
+    params.steps_per_frame = Number($("#steps-per-frame").val()) || 1;
+    params.record_interval = Number($("#record-interval").val()) || 10;
+    initCharts();
+    simWorker.postMessage({ type: "init", params, genomes: lines });
+});
+
+$("#btn-copy-genomes").on("click", function() {
+    const text = $("#genome-textarea").val();
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = $(this);
+        btn.text("✅");
+        setTimeout(() => btn.text("📋"), 1500);
     });
 });
 
