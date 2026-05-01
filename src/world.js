@@ -17,6 +17,7 @@ class World {
         }
 
         this.plants = [];
+        this.cellCount = 0;
     }
 
     /**
@@ -82,10 +83,15 @@ class World {
      * Remove all cells from cell grid
      */
     killPlant(plant){
-        this.plants.splice(this.plants.indexOf(plant), 1);
-        plant.cells.forEach(function(cell){
-            this.cells[cell.x][cell.y] = null;
-        }, this);
+        const idx = this.plants.indexOf(plant);
+        if (idx > -1) {
+            this.plants.splice(idx, 1);
+            this.cellCount -= plant.cells.length;
+            for (let i = 0; i < plant.cells.length; i++) {
+                const cell = plant.cells[i];
+                this.cells[cell.x][cell.y] = null;
+            }
+        }
     }
 
     getX(x){
@@ -102,43 +108,55 @@ class World {
     addCell(cell){
         if (this.cells[cell.x][cell.y] !== undefined) {
             this.cells[cell.x][cell.y] = cell;
+            this.cellCount++;
         }
     }
 
     getPixelBuffer(cellSize){
         const w = this.width * cellSize;
         const h = this.height * cellSize;
-        const buf = new Uint8ClampedArray(w * h * 4); // RGBA, initialized to 0 (transparent/black)
+        const buf = new Uint8ClampedArray(w * h * 4);
+        const plants = this.plants;
 
-        this.plants.forEach(function(plant){
+        for (let i = 0; i < plants.length; i++) {
+            const plant = plants[i];
             const [baseR, baseG, baseB] = this.getBaseColour(plant);
-            plant.cells.forEach(function(cell){
-                const col = cell.energised
-                    ? [baseR, baseG, baseB]
-                    : [Math.round(baseR * 0.7), Math.round(baseG * 0.7), Math.round(baseB * 0.7)];
-
+            const darkR = Math.round(baseR * 0.7);
+            const darkG = Math.round(baseG * 0.7);
+            const darkB = Math.round(baseB * 0.7);
+            
+            const cells = plant.cells;
+            for (let j = 0; j < cells.length; j++) {
+                const cell = cells[j];
+                const r0 = cell.energised ? baseR : darkR;
+                const g0 = cell.energised ? baseG : darkG;
+                const b0 = cell.energised ? baseB : darkB;
+                
                 const px0 = cell.x * cellSize;
-                // world y=0 is ground (bottom), canvas y=0 is top
                 const py0 = (this.height - 1 - cell.y) * cellSize;
 
                 for (let dy = 0; dy < cellSize; dy++) {
+                    const rowIdx = (py0 + dy) * w;
                     for (let dx = 0; dx < cellSize; dx++) {
-                        // Draw 1px border: darken edge pixels
-                        const isBorder = dx === 0 || dy === 0 || dx === cellSize - 1 || dy === cellSize - 1;
-                        const [r, g, b] = isBorder
-                            ? [Math.round(col[0] * 0.5), Math.round(col[1] * 0.5), Math.round(col[2] * 0.5)]
-                            : col;
-                        const idx = ((py0 + dy) * w + (px0 + dx)) * 4;
-                        buf[idx]     = r;
-                        buf[idx + 1] = g;
-                        buf[idx + 2] = b;
+                        const isBorder = cellSize > 1 && (dx === 0 || dy === 0 || dx === cellSize - 1 || dy === cellSize - 1);
+                        const idx = (rowIdx + px0 + dx) * 4;
+                        
+                        if (isBorder) {
+                            buf[idx]     = Math.round(r0 * 0.5);
+                            buf[idx + 1] = Math.round(g0 * 0.5);
+                            buf[idx + 2] = Math.round(b0 * 0.5);
+                        } else {
+                            buf[idx]     = r0;
+                            buf[idx + 1] = g0;
+                            buf[idx + 2] = b0;
+                        }
                         buf[idx + 3] = 255;
                     }
                 }
-            }, this);
-        }, this);
+            }
+        }
 
-        return { buffer: buf, width: w, height: h, cellCount: this.plants.reduce((s,p)=>s+p.cells.length,0) };
+        return { buffer: buf, width: w, height: h, cellCount: this.cellCount };
     }
 
     getBaseColour(plant){

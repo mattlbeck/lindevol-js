@@ -65,15 +65,20 @@ class Mutator{
     }
 
     mutate(genome){
+        let mutated = false;
         if(this.mProb(this.pR, genome.mut_exp)){
             this.replace(genome);
+            mutated = true;
         }
         if(this.mProb(this.pI, genome.mut_exp)){
             this.insert(genome);
+            mutated = true;
         }
         if(this.mProb(this.pD, genome.mut_exp)){
             this.delete(genome);
+            mutated = true;
         }
+        return mutated;
     }
 
     mProb(p, exp){
@@ -87,7 +92,7 @@ class Mutator{
             genome[i] = this.randomChar();
             break;
         case "bitwise":
-            genome[i] = genome[i] ^ Math.pow(2, randomInt(0, 7));
+            genome[i] = genome[i] ^ (1 << randomInt(0, 7));
             break;
         default:
             throw new Error(`Invalid mutation replacement mode: ${this.pRmode}`);
@@ -198,7 +203,7 @@ class PromotorInterpreter extends GenomeInterpreter{
         }
         genes.forEach(function(gene){
             // extract 6 least sig bits from terminator as the action code
-            var actionCode = gene[gene.length-1] & (Math.pow(2, 6) - 1);
+            var actionCode = gene[gene.length-1] & ((1 << 6) - 1);
             var action = this.mapping.getAction(actionCode);
             
             // take information from operators to create state mask
@@ -206,13 +211,13 @@ class PromotorInterpreter extends GenomeInterpreter{
             var eqMask = 0; // specified which bits contribute to the state mask
             for(var i=1; i<gene.length-1; i++) {
                 // 4 least sig bits determine the mask index
-                var maskBit = gene[i] & (Math.pow(2, 4) - 1);
+                var maskBit = gene[i] & ((1 << 4) - 1);
 
                 // determines if the mask at this index is set to 1 or 0
-                var bitState = (gene[i] & Math.pow(2, 4)) >> 4;
-                mask += Math.pow(2, maskBit)*bitState;
+                var bitState = (gene[i] & (1 << 4)) >> 4;
+                mask += (1 << maskBit) * bitState;
 
-                eqMask += Math.pow(2, maskBit);
+                eqMask += (1 << maskBit);
             }
             rules.push(new Rule(eqMask, mask, action));
         }, this);
@@ -221,7 +226,7 @@ class PromotorInterpreter extends GenomeInterpreter{
 }
 
 function bitSet(byte, i){
-    return (byte & Math.pow(2, i)) >> i;
+    return (byte >> i) & 1;
 }
 
 export {ByteArray, BlockInterpreter, PromotorInterpreter, Mutator};

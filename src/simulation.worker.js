@@ -4,7 +4,7 @@ import {SimData} from "./simdata.js";
 let simulation = null;
 let data = null;
 let running = false;
-let cellSize = 8;
+let cellSize = 2;
 const TARGET_FPS = 60;
 const FRAME_INTERVAL_MS = 1000 / TARGET_FPS;
 let lastFrameTime = 0;

@@ -9,6 +9,8 @@ class Plant{
         this.cells = [new Cell(this, this.world.getX(x), 0)];
         this.genome = genome;
         this.useInternalState = useInternalState;
+        this.rules = null; // cached rules
+        this.leanoverEnergised = 0; // Incremental tracking
     }
 
     getNeighbourhood(cell){
@@ -18,21 +20,20 @@ class Plant{
             var pos = NEIGHBOURHOOD[i];
             var x = cell.x + pos[0];
             var y = cell.y + pos[1];
-            try{
+            
+            // Bounds check instead of try-catch
+            if (x >= 0 && x < this.world.width && y >= 0 && y < this.world.height) {
                 var worldPos = this.world.cells[x][y];
-            }
-            catch(error){
-                continue;
-            }
-            if (worldPos instanceof Cell){
-                mask = mask | Math.pow(2, i);
+                if (worldPos instanceof Cell){
+                    mask = mask | (1 << i);
+                }
             }
         }
         return mask;
     }
 
     getState(cell){
-        return this.getNeighbourhood(cell) | cell.internalState | (Math.pow(2, 15) * ( cell.energised ? 1 : 0));
+        return this.getNeighbourhood(cell) | cell.internalState | (( cell.energised ? 1 : 0) << 15);
     }
 
     grow(){
@@ -81,6 +82,12 @@ class Plant{
         // grow cell in to empty space
         var new_cell = new Cell(this, this.world.getX(x), y);
         this.cells.push(new_cell);
+        
+        // Update incremental tracking
+        const rootCell = this.cells[0];
+        const le = this.world.width/2 - ( (( 1.5*this.world.width ) + new_cell.x - rootCell.x)  % this.world.width);
+        this.leanoverEnergised += le;
+
         this.world.addCell(new_cell);
     }
 
@@ -96,20 +103,13 @@ class Plant{
      */
     getDeathProbability(death_factor, natural_exp, energy_exp, leanover_factor){
         var numCells = this.cells.length;
-        var leanoverEnergised = 0;
-        var rootCell = this.cells[0];
-        for(var i=0; i<this.cells.length; i++){
-            var cell = this.cells[i];
-            var le = this.world.width/2 - ( (( 1.5*this.world.width ) + cell.x - rootCell.x)  % this.world.width);
-            leanoverEnergised += le;
-        }
-
+        
         var leanoverCells = 2/(numCells*(numCells-1));
         if (leanoverCells === Infinity){
             leanoverCells = 0;
         }
 
-        var leanoverTerm = leanoverCells*Math.abs(leanoverEnergised);
+        var leanoverTerm = leanoverCells*Math.abs(this.leanoverEnergised);
         
         var d_natural = Math.pow(numCells, natural_exp);
         var d_energy = Math.pow(this.energisedCount+1, energy_exp);

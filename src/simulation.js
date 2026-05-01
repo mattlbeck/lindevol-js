@@ -105,12 +105,16 @@ class Simulation {
     }
 
     simulateActions(){
-        this.world.plants.forEach(function(plant){
-            var rules = this.genomeInterpreter.interpret(plant.genome);
-            plant.cells.forEach(function(cell){
-                this.cellAction(cell, rules);
-            }, this);
-        }, this);
+        for (let i = 0; i < this.world.plants.length; i++) {
+            const plant = this.world.plants[i];
+            if (!plant.rules) {
+                plant.rules = this.genomeInterpreter.interpret(plant.genome);
+            }
+            const rules = plant.rules;
+            for (let j = 0; j < plant.cells.length; j++) {
+                this.cellAction(plant.cells[j], rules);
+            }
+        }
     }
 
     cellAction(cell, rules){
@@ -135,9 +139,12 @@ class Simulation {
         var mutator = new Mutator(this.params.mut_factor, this.params.mut_replace, 
             this.params.mut_insert, this.params.mut_delete, 
             0, this.params.mut_replace_mode, this.mut_units);
-        this.world.plants.forEach(function(plant){
-            mutator.mutate(plant.genome);
-        }, this);
+        for (let i = 0; i < this.world.plants.length; i++) {
+            const plant = this.world.plants[i];
+            if (mutator.mutate(plant.genome)) {
+                plant.rules = null; // Invalidate cache
+            }
+        }
     }
 
     /**
@@ -145,9 +152,11 @@ class Simulation {
      * whether each plant dies on this step
      */
     simulateDeath(){
-        var dead_plants = [];
-        this.world.plants.forEach(function(plant){
-            var deathProb = plant.getDeathProbability(
+        const dead_plants = [];
+        const plants = this.world.plants;
+        for (let i = 0; i < plants.length; i++) {
+            const plant = plants[i];
+            const deathProb = plant.getDeathProbability(
                 this.params.death_factor,
                 this.params.natural_exp,
                 this.params.energy_exp,
@@ -156,10 +165,10 @@ class Simulation {
             if (randomProb(deathProb.prob)){
                 dead_plants.push(plant);
             }
-        }, this);
-        dead_plants.forEach(function(plant){
-            this.world.killPlant(plant);
-        }, this);
+        }
+        for (let i = 0; i < dead_plants.length; i++) {
+            this.world.killPlant(dead_plants[i]);
+        }
     }
 
     /**
@@ -168,9 +177,24 @@ class Simulation {
      * which causes that cell to be energised.
      */
     simulateLight(){
-        for(var x=0; x<this.world.width; x++){
-            for(var y=0; y<this.world.height; y++){
-                var cell = this.world.cells[x][this.world.height-y-1];
+        const colTops = new Int16Array(this.world.width).fill(-1);
+        const plants = this.world.plants;
+        for (let i = 0; i < plants.length; i++) {
+            const cells = plants[i].cells;
+            for (let j = 0; j < cells.length; j++) {
+                const cell = cells[j];
+                if (cell.y > colTops[cell.x]) {
+                    colTops[cell.x] = cell.y;
+                }
+            }
+        }
+
+        for(let x=0; x<this.world.width; x++){
+            const topY = colTops[x];
+            if (topY === -1) continue;
+
+            for(let y=topY; y>=0; y--){
+                const cell = this.world.cells[x][y];
                 if(cell !== null){
                     if(randomProb(this.params.energy_prob)){
                         cell.energised = true;
