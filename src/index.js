@@ -198,12 +198,111 @@ function renderCellInfo(msg) {
         return;
     }
     cellinfo.empty();
-    cellinfo.append(`<p>${msg.cellStr}</p><p>Neighbourhood: ${msg.neighbourhood}</p><p>Rule: ${msg.matching_rule}</p>`);
-    cellinfo.append(`<p>Plant death prob ${msg.death} genome length ${msg.genomeLength}</p>`);
-    cellinfo.append(`<p>mut exponent: ${msg.mutExp}</p>`);
-    msg.rules.forEach(function(r) {
-        cellinfo.append(`<p>${r}</p>`);
+
+    const generatePictogram = (state, eqMask, direction = null) => {
+        const getCellHtml = (bitIndex, pos) => {
+            let classes = ["pictogram-cell"];
+            if (bitIndex === "center") {
+                classes.push("center");
+            } else {
+                if (direction && direction[0] === pos[0] && direction[1] === pos[1]) {
+                    classes.push("divide-target");
+                } else {
+                    const bitMask = Math.pow(2, bitIndex);
+                    if (eqMask !== undefined) {
+                        if ((eqMask & bitMask) === 0) {
+                            classes.push("any");
+                        } else if ((state & bitMask) !== 0) {
+                            classes.push("filled");
+                        }
+                    } else {
+                        if ((state & bitMask) !== 0) {
+                            classes.push("filled");
+                        }
+                    }
+                }
+            }
+            return `<div class="${classes.join(" ")}"></div>`;
+        };
+
+        return `
+            <div class="pictogram">
+                ${getCellHtml(5, [-1, 1])}${getCellHtml(6, [0, 1])}${getCellHtml(7, [1, 1])}
+                ${getCellHtml(3, [-1, 0])}${getCellHtml("center", [0, 0])}${getCellHtml(4, [1, 0])}
+                ${getCellHtml(0, [-1, -1])}${getCellHtml(1, [0, -1])}${getCellHtml(2, [1, -1])}
+            </div>
+        `;
+    };
+
+    // Header info
+    cellinfo.append(`<p style="margin-bottom:8px"><strong>${msg.cellStr}</strong></p>`);
+    
+    // State pictogram
+    const statePicHtml = generatePictogram(msg.cellState, undefined);
+    let stateInfoHtml = `
+        <div style="display:flex; align-items:center; margin-bottom:12px;">
+            ${statePicHtml}
+            <div>
+                <div style="font-size:0.85em; color:var(--text-muted)">Current State</div>
+                <div style="font-family:var(--font-mono); font-size:0.8em">Energised: ${msg.energised}</div>
+            </div>
+        </div>
+    `;
+    cellinfo.append(stateInfoHtml);
+
+    // Plant details
+    cellinfo.append(`
+        <div style="font-size:0.85em; color:var(--text-muted); margin-bottom:12px;">
+            <p style="margin:2px 0">Death Prob: ${msg.death}</p>
+            <p style="margin:2px 0">Genome Length: ${msg.genomeLength} | Mut Exp: ${msg.mutExp}</p>
+        </div>
+    `);
+
+    // Rules
+    const rulesHeader = $(`
+        <div>
+            <div style="display:flex; align-items:center; margin-bottom:6px;">
+                <div style="font-weight:600;">Genome Rules:</div>
+                <div class="info-icon" style="margin-left:6px; font-size:0.8em; cursor:pointer;" title="Click to toggle explanation" id="toggle-rule-info">?</div>
+            </div>
+            <div id="rule-info-content" style="display:none; font-size:0.8em; color:var(--text-muted); background:rgba(255,255,255,0.05); padding:6px; border-radius:4px; margin-bottom:8px; line-height:1.4;">
+                <div style="margin-bottom:4px"><strong>Pictogram Legend:</strong></div>
+                <div style="display:flex; align-items:center; gap:4px; margin-bottom:2px">
+                    <div class="pictogram-cell filled" style="width:10px; height:10px; display:inline-block;"></div> Required filled space
+                </div>
+                <div style="display:flex; align-items:center; gap:4px; margin-bottom:2px">
+                    <div class="pictogram-cell any" style="width:10px; height:10px; display:inline-block;"></div> Ignored space (don't care)
+                </div>
+                <div style="display:flex; align-items:center; gap:4px; margin-bottom:2px">
+                    <div class="pictogram-cell divide-target" style="width:10px; height:10px; display:inline-block;"></div> Divide target direction
+                </div>
+                <div style="margin-top:6px; border-top:1px solid rgba(255,255,255,0.1); padding-top:4px;">
+                    <strong>Highlighted rows</strong> indicate rules whose conditions match the current state. The first matched rule will be executed next step if the cell has energy.
+                </div>
+            </div>
+        </div>
+    `);
+    
+    rulesHeader.find("#toggle-rule-info").on("click", function() {
+        rulesHeader.find("#rule-info-content").toggle();
     });
+    
+    cellinfo.append(rulesHeader);
+
+    const rulesContainer = $('<div style="max-height: 250px; overflow-y: auto; padding-right: 4px;"></div>');
+    msg.rules.forEach(function(r) {
+        const pic = generatePictogram(r.state, r.eqMask, r.direction);
+        const matchClass = r.matches ? "matching" : "";
+        const ruleHtml = `
+            <div class="rule-item ${matchClass}">
+                ${pic}
+                <span>#${r.index}</span>
+                <span class="rule-action">${r.actionType}</span>
+            </div>
+        `;
+        rulesContainer.append(ruleHtml);
+    });
+    cellinfo.append(rulesContainer);
 }
 
 // ── Controls ──────────────────────────────────────────────────────────────────

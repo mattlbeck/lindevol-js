@@ -159,13 +159,34 @@ function sendCellInfo(x, y) {
     try {
         const plant = cell.plant;
         const rules = simulation.genomeInterpreter.interpret(plant.genome);
-        const neighbourhood = plant.getNeighbourhood(cell);
-        let matching_rule = "None";
-        for (let i = 0; i < rules.length; i++) {
-            if (rules[i].state === neighbourhood) {
-                matching_rule = `#${i} ${rules[i]}`;
-            }
+
+        // Use the correct state depending on interpreter type
+        let cellState;
+        if (simulation.params.genome_interpreter === "block") {
+            cellState = plant.getNeighbourhood(cell);
+        } else {
+            cellState = plant.getState(cell);
         }
+        const neighbourhood = plant.getNeighbourhood(cell);
+        const energised = cell.energised;
+
+        // Serialize rules as structured objects for rich UI rendering
+        const serializedRules = rules.map((r, i) => {
+            const matches = r.matches(cellState);
+            const actionStr = r.action.toString();
+            const isDiv = actionStr.startsWith("divide");
+            return {
+                index: i,
+                matches,
+                state: r.state,
+                eqMask: r.eqMask,
+                actionType: isDiv ? "divide" : actionStr,
+                direction: isDiv ? r.action.getDirection() : null,
+            };
+        });
+
+        const matchingRuleIndex = serializedRules.findIndex(r => r.matches);
+
         const death = plant.getDeathProbability(
             simulation.params.death_factor,
             simulation.params.natural_exp,
@@ -177,11 +198,14 @@ function sendCellInfo(x, y) {
             found: true,
             cellStr: cell.toString(),
             neighbourhood,
-            matching_rule,
+            energised,
+            cellState,
+            matchingRuleIndex,
             death: JSON.stringify(death),
             genomeLength: plant.genome.length,
             mutExp: plant.genome.mut_exp,
-            rules: rules.map(r => r.toString())
+            rules: serializedRules,
+            interpreterType: simulation.params.genome_interpreter,
         });
     } catch (e) {
         self.postMessage({ type: "cellInfo", found: false, error: e.message });
