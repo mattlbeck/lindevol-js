@@ -25,6 +25,7 @@ self.onmessage = function(event) {
     case "step":
         doStep();
         pushFrame();
+        pushStats();
         break;
     case "getCell":
         sendCellInfo(msg.x, msg.y);
@@ -54,6 +55,7 @@ function initSim(params) {
     data = new SimData(simulation);
     simulation.init_population();
     pushFrame();
+    pushStats();
 }
 
 function loop() {
@@ -67,6 +69,7 @@ function loop() {
     const now = Date.now();
     if (now - lastFrameTime >= FRAME_INTERVAL_MS) {
         pushFrame();
+        pushStats();
         lastFrameTime = now;
     }
 
@@ -84,12 +87,16 @@ function doStep() {
 
     if (simulation.stepnum % simulation.params.record_interval === 0 || simulation.stepnum === 1) {
         data.recordStep();
-        self.postMessage({
-            type: "stats",
-            data: JSON.parse(JSON.stringify(data.data)),
-            stepnum: simulation.stepnum
-        });
     }
+}
+
+function pushStats() {
+    if (!data) return;
+    self.postMessage({
+        type: "stats",
+        data: JSON.parse(JSON.stringify(data.data)),
+        stepnum: simulation.stepnum
+    });
 }
 
 function applyDisturbance(strength) {

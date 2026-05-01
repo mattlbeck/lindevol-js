@@ -1,7 +1,8 @@
-feat: add CSS-based zoom and fit-to-screen controls
+fix: rate-limit telemetry updates to prevent UI freezing
 
-- Added a zoom toolbar (Zoom In, Zoom Out, Reset, Fit Screen) above the simulation canvas in `index.html`.
-- Implemented `applyZoom()` in `src/index.js` to scale the canvas visually via CSS without altering the underlying web-worker pixel buffer.
-- Updated mouse coordinate projection math for cell info clicks and Brush Mode to correctly map scaled CSS coordinates back to physical grid space.
+- Abstracted the `self.postMessage` telemetry dispatch into a `pushStats()` function inside `simulation.worker.js`.
+- Moved `pushStats()` out of the high-frequency `doStep()` loop and synced it with the `pushFrame()` timing logic (capped at ~60 FPS).
+- The worker still records data points at the user's defined `record_interval`, but buffers the data to prevent flooding the main thread's message queue.
+- This ensures the UI (specifically the "Stop" button) remains fully responsive even when running thousands of steps per frame.
 
 Co-authored-by: Gemini 3.1 Pro (High)
