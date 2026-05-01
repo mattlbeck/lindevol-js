@@ -9,7 +9,9 @@ The LindEvol engine uses several configurable parameters (defined in the JSON Co
 Every simulation step, a plant evaluates its probability of dying. The death probability $P(\text{death})$ is calculated based on its physical size, its energy reserves, and how structurally unbalanced (leaning) it is.
 
 **Equation:**
+
 $$P(\text{death}) = D_f \times N^{N_{exp}} \times (E + 1)^{E_{exp}} + L_f \times \text{LeanTerm}$$
+
 
 **Parameters:**
 - $D_f$ (`death_factor`): The base multiplier for death probability.
@@ -24,7 +26,9 @@ $$P(\text{death}) = D_f \times N^{N_{exp}} \times (E + 1)^{E_{exp}} + L_f \times
 When a plant attempts to grow into a space already occupied by another plant's cell, an attack occurs. 
 
 **Equation:**
+
 $$P(\text{kill}) = \frac{1}{E_{\text{target}}}$$
+
 
 **Parameters/Variables:**
 - $E_{\text{target}}$: The number of energised cells possessed by the defending plant. The more energy the defender has, the lower the probability the attacker succeeds in killing it. If the defender has 0 energy, the attacker's success is guaranteed (evaluates to Infinity mathematically, capped to 1.0 probability).
@@ -34,12 +38,14 @@ $$P(\text{kill}) = \frac{1}{E_{\text{target}}}$$
 When a seed is spawned, its genome is subjected to potential mutations. The probability of any specific mutation event (replacement, insertion, or deletion) depends on the base probabilities defined in the config, scaled by the plant's inherited mutation exponent.
 
 **Equation:**
+
 $$P(\text{event}) = p_{\text{event}} \times (\text{mut\_prob})^{\text{mut\_exp}}$$
+
 
 **Parameters:**
 - $p_{\text{event}}$: The base probability of the specific event type (`mut_replace`, `mut_insert`, or `mut_delete`).
 - `mut_prob`: The global base modifier for mutation scaling.
-- `mut_exp`: An inherited, evolvable trait specific to the individual genome. It acts as the exponent to `mut_prob`. A higher `mut_exp` (when `mut_prob` < 1) exponentially decreases the overall probability of a mutation occurring.
+- `mut_exp`: An inherited, evolvable trait specific to the individual genome. It acts as the exponent to `mut_prob`. A higher `mut_exp` (when `mut_prob < 1`) exponentially decreases the overall probability of a mutation occurring.
 
 *Note:* If an event occurs, `mut_units` determines how many bytes are inserted or deleted in a single event.
 
@@ -93,12 +99,13 @@ To understand the evolutionary dynamics of the LindEvol simulation, we track two
 A genome in LindEvol is an array of bytes (values 0–255), where each byte represents a potential action or genetic building block. Allele Richness measures the variety and evenness of these building blocks across the entire population. If a population relies on a wide variety of bytes, the entropy is high. If the population relies on only a few specific bytes (e.g., losing the ability to grow laterally), the entropy plummets.
 
 **Implementation:**
-We calculate the global frequency ($p_i$) of every byte ($0 \le i \le 255$) across a sample of genomes in the living population. We then compute the Shannon Entropy:
+We calculate the global frequency ($p_i$) of every byte (`0 <= i <= 255`) across a sample of genomes in the living population. We then compute the Shannon Entropy:
+
 $$H = -\sum_{i=0}^{255} p_i \log_2(p_i)$$
 
 **Mathematical Boundaries:**
 - **Minimum (0):** Achieved when there is zero uncertainty. In the simulation, this occurs if every byte across the entire population's genome pool is exactly the same value (e.g., every byte is a 14).
-- **Maximum (8):** The upper bound is $\log_2(N)$ where $N$ is the alphabet size. Since bytes range from 0–255, the maximum entropy is $\log_2(256) = 8$. This represents maximum randomness, where every byte value occurs with the exact same frequency.
+- **Maximum (8):** The upper bound is $\log_2(N)$ where $N$ is the alphabet size. Since bytes range from `0 <= i <= 255`, the maximum entropy is $\log_2(256) = 8$. This represents maximum randomness, where every byte value occurs with the exact same frequency.
 
 **Insights:**
 - **Plummeting Entropy:** Indicates a loss of functional diversity. The population has converged on a narrow "alphabet" of instructions.
