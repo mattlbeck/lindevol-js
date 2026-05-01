@@ -50,6 +50,7 @@ class SimData{
     constructor(simulation){
         this.sim = simulation;
         this.data = {"stepnum": []};
+        this.lastStep = 0;
         this.collectors = [
             new Collector("population", AsIs, function(sim){
                 return sim.world.plants.length;
@@ -144,11 +145,24 @@ class SimData{
      * Collect data for the current step
      */
     recordStep(){
+        const delta = this.sim.stepnum - this.lastStep;
+        this.lastStep = this.sim.stepnum;
+
         var stepData = {};
         this.collectors.forEach(function(c){
             var values = c.collect(this.sim);
             Object.assign(stepData, values);
         }, this);
+
+        // Normalize rate-based metrics by the number of steps since the last record
+        if (delta > 0) {
+            const rateKeys = ["new_plants", "deaths", "attacks", "total_seeds", "flying_seeds"];
+            rateKeys.forEach(k => {
+                if (stepData[k] !== undefined) {
+                    stepData[k] /= delta;
+                }
+            });
+        }
 
         // Reset incremental stats for the next interval
         this.sim.stats.newPlants = 0;
