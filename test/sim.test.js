@@ -165,7 +165,10 @@ describe("Plant", function() {
         });
         context("Given a gene for flying seed", function(){
             beforeEach("Add gene to plant and execute action", function(){
-                plant.genome = ByteArray.from([0, 220]);
+                // With action_map [220,15,0,10,10,0] (sum=255),
+                // FlyingSeed occupies normalized codes 220-234 → bytes 221-235.
+                // Use 228 as a safe midpoint.
+                plant.genome = ByteArray.from([0, 228]);
                 plant.cells[0].energised = true;
                 sim.simulateActions();
             });

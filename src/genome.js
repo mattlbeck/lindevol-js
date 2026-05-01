@@ -141,8 +141,8 @@ class GenomeInterpreter{
     /**
      * Methods that decode genomes into rules
      */
-    constructor(mapping){
-        this.mapping = new ActionMap(mapping);
+    constructor(mapping, codeRange=256){
+        this.mapping = new ActionMap(mapping, codeRange);
     }
     interpret(bytearray){
 
@@ -150,6 +150,9 @@ class GenomeInterpreter{
 }
 
 class BlockInterpreter extends GenomeInterpreter{
+    constructor(mapping){
+        super(mapping, 256); // action byte is full 0-255 range
+    }
     interpret(bytearray){
         var rules = [];
         for(var i=0; i < bytearray.length; i+=2){
@@ -161,6 +164,9 @@ class BlockInterpreter extends GenomeInterpreter{
 }
 
 class PromotorInterpreter extends GenomeInterpreter{
+    constructor(mapping){
+        super(mapping, 64); // terminator contributes lower 6 bits: range 0-63
+    }
     interpret(bytearray){
         var rules = [];
         var genes = [];

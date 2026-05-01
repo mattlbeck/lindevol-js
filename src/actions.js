@@ -118,20 +118,26 @@ class StateBitN extends Action{
 
 class ActionMap {
 
-    constructor(mapping){
+    constructor(mapping, codeRange=256){
         this.mapping = mapping;
+        this.codeRange = codeRange;
         this.actions = [Divide, FlyingSeed, LocalSeed, MutatePlus, MutateMinus, StateBitN];
     }
 
     getAction(actionCode){
+        // Normalize the action code into the [0, sum) range so weights can be
+        // any positive integers rather than needing to sum to codeRange.
+        const sum = this.mapping.reduce((a, b) => a + b, 0);
+        const normalizedCode = Math.floor((actionCode / this.codeRange) * sum);
         var mappingCount = 0;
         for(var i=0; i<this.mapping.length; i++){
             mappingCount += this.mapping[i];
-            if (actionCode < mappingCount){
+            if (normalizedCode < mappingCount){
                 return new this.actions[i](actionCode);
             }
         }
-        throw `Action code ${actionCode} does not map to an action`;
+        // Fallback for floating-point edge cases
+        return new this.actions[this.mapping.length - 1](actionCode);
     }
 
 }

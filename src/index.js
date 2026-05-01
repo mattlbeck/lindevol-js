@@ -26,34 +26,34 @@ function applyZoom() {
     }
 }
 
-$("#zoom-out").on("click", function() { fitScreen = false; zoomLevel = Math.max(0.1, zoomLevel - 0.25); applyZoom(); });
-$("#zoom-in").on("click", function() { fitScreen = false; zoomLevel += 0.25; applyZoom(); });
-$("#zoom-reset").on("click", function() { fitScreen = false; zoomLevel = 1.0; applyZoom(); });
-$("#zoom-fit").on("click", function() { fitScreen = true; applyZoom(); });
+$("#zoom-out").on("click", function () { fitScreen = false; zoomLevel = Math.max(0.1, zoomLevel - 0.25); applyZoom(); });
+$("#zoom-in").on("click", function () { fitScreen = false; zoomLevel += 0.25; applyZoom(); });
+$("#zoom-reset").on("click", function () { fitScreen = false; zoomLevel = 1.0; applyZoom(); });
+$("#zoom-fit").on("click", function () { fitScreen = true; applyZoom(); });
 
 // ── Web Worker ────────────────────────────────────────────────────────────────
 const simWorker = new Worker(new URL('./simulation.worker.js', import.meta.url), { type: 'module' });
 
-simWorker.onmessage = function(event) {
+simWorker.onmessage = function (event) {
     const msg = event.data;
     switch (msg.type) {
-    case "frame":
-        renderFrame(msg);
-        break;
-    case "stats":
-        updateCharts(msg.data, msg.stepnum);
-        updateStats(msg.stepnum);
-        break;
-    case "cellInfo":
-        renderCellInfo(msg);
-        break;
-    case "exportedGenomes":
-        handleExportedGenomes(msg.genomes);
-        break;
+        case "frame":
+            renderFrame(msg);
+            break;
+        case "stats":
+            updateCharts(msg.data, msg.stepnum);
+            updateStats(msg.stepnum);
+            break;
+        case "cellInfo":
+            renderCellInfo(msg);
+            break;
+        case "exportedGenomes":
+            handleExportedGenomes(msg.genomes);
+            break;
     }
 };
 
-simWorker.onerror = function(e) {
+simWorker.onerror = function (e) {
     console.error("Worker error:", e);
 };
 
@@ -73,47 +73,49 @@ function initCharts() {
 
     charts.population = new Chart(document.getElementById('chart-population'), {
         type: 'line',
-        data: { labels: [], datasets: [
-            { label: 'Plants', data: [], borderColor: '#8dc63f', backgroundColor: 'rgba(141, 198, 63, 0.1)' },
-            { label: 'Total Cells', data: [], borderColor: '#a78bfa', backgroundColor: 'rgba(167, 139, 250, 0.1)' },
-            { label: 'Energised Cells', data: [], borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.1)' }
-        ]},
+        data: {
+            labels: [], datasets: [
+                { label: 'Plants', data: [], borderColor: '#8dc63f', backgroundColor: 'rgba(141, 198, 63, 0.1)' },
+                { label: 'Total Cells', data: [], borderColor: '#a78bfa', backgroundColor: 'rgba(167, 139, 250, 0.1)' },
+                { label: 'Energised Cells', data: [], borderColor: '#fbbf24', backgroundColor: 'rgba(251, 191, 36, 0.1)' }
+            ]
+        },
         options: commonOptions
     });
 
     charts.plantSize = new Chart(document.getElementById('chart-plant-size'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Mean Plant Size', data: [], borderColor: '#38bdf8' }]},
+        data: { labels: [], datasets: [{ label: 'Mean Plant Size', data: [], borderColor: '#38bdf8' }] },
         options: commonOptions
     });
 
     charts.plantHeight = new Chart(document.getElementById('chart-plant-height'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Mean Plant Height', data: [], borderColor: '#fb923c' }]},
+        data: { labels: [], datasets: [{ label: 'Mean Plant Height', data: [], borderColor: '#fb923c' }] },
         options: commonOptions
     });
 
     charts.genomeSize = new Chart(document.getElementById('chart-genome-size'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Mean Genome Size', data: [], borderColor: '#f472b6' }]},
+        data: { labels: [], datasets: [{ label: 'Mean Genome Size', data: [], borderColor: '#f472b6' }] },
         options: commonOptions
     });
 
     charts.mutExp = new Chart(document.getElementById('chart-mut-exp'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Mean Mut Exp', data: [], borderColor: '#c084fc' }]},
+        data: { labels: [], datasets: [{ label: 'Mean Mut Exp', data: [], borderColor: '#c084fc' }] },
         options: commonOptions
     });
 
     charts.geneticDistance = new Chart(document.getElementById('chart-genetic-distance'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Mean Pairwise Distance', data: [], borderColor: '#facc15' }]},
+        data: { labels: [], datasets: [{ label: 'Mean Pairwise Distance', data: [], borderColor: '#facc15' }] },
         options: commonOptions
     });
 
     charts.alleleEntropy = new Chart(document.getElementById('chart-allele-entropy'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Shannon Entropy (Bits)', data: [], borderColor: '#2dd4bf' }]},
+        data: { labels: [], datasets: [{ label: 'Shannon Entropy (Bits)', data: [], borderColor: '#2dd4bf' }] },
         options: commonOptions
     });
 }
@@ -157,7 +159,7 @@ function renderFrame(msg) {
     const { buffer, width, height, cellCount, stepnum } = msg;
     canvas.width = width;
     canvas.height = height;
-    
+
     applyZoom();
 
     const imageData = new ImageData(new Uint8ClampedArray(buffer), width, height);
@@ -175,7 +177,7 @@ let brushMode = false;
 let isPainting = false;
 let selectedCell = null;
 
-canvas.addEventListener("click", function(event) {
+canvas.addEventListener("click", function (event) {
     if (brushMode) return; // brush mode handles its own mouse events
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -236,7 +238,7 @@ function renderCellInfo(msg) {
 
     // Header info
     cellinfo.append(`<p style="margin-bottom:8px"><strong>${msg.cellStr}</strong></p>`);
-    
+
     // State pictogram
     const statePicHtml = generatePictogram(msg.cellState, undefined);
     let stateInfoHtml = `
@@ -282,15 +284,15 @@ function renderCellInfo(msg) {
             </div>
         </div>
     `);
-    
-    rulesHeader.find("#toggle-rule-info").on("click", function() {
+
+    rulesHeader.find("#toggle-rule-info").on("click", function () {
         rulesHeader.find("#rule-info-content").toggle();
     });
-    
+
     cellinfo.append(rulesHeader);
 
     const rulesContainer = $('<div style="max-height: 250px; overflow-y: auto; padding-right: 4px;"></div>');
-    msg.rules.forEach(function(r) {
+    msg.rules.forEach(function (r) {
         const pic = generatePictogram(r.state, r.eqMask, r.direction);
         const matchClass = r.matches ? "matching" : "";
         const ruleHtml = `
@@ -308,18 +310,18 @@ function renderCellInfo(msg) {
 // ── Controls ──────────────────────────────────────────────────────────────────
 let run = false;
 
-document.querySelector("#step").addEventListener("click", function() {
+document.querySelector("#step").addEventListener("click", function () {
     simWorker.postMessage({ type: "step" });
 });
 
-$("#run").on("click", function() {
+$("#run").on("click", function () {
     run = !run;
     $(this).text(run ? "Stop" : "Run");
     $(this).toggleClass("btn-success btn-danger");
     simWorker.postMessage({ type: run ? "start" : "stop" });
 });
 
-$("#reload").on("click", function() {
+$("#reload").on("click", function () {
     if (run) {
         run = false;
         $("#run").text("Run").removeClass("btn-danger").addClass("btn-success");
@@ -328,30 +330,30 @@ $("#reload").on("click", function() {
     reloadSim();
 });
 
-$("#toggle-display").on("click", function() {
+$("#toggle-display").on("click", function () {
     $("#display-content").toggleClass("hidden");
     $(this).find(".toggle-icon").toggleClass("rotated");
 });
 
-$("#toggle-params").on("click", function() {
+$("#toggle-params").on("click", function () {
     $("#params-content").toggleClass("hidden");
     $(this).find(".toggle-icon").toggleClass("rotated");
 });
 
 // ── Disturbance console ───────────────────────────────────────────────────────
-$("#toggle-disturbance").on("click", function() {
+$("#toggle-disturbance").on("click", function () {
     $("#disturbance-content").toggleClass("hidden");
     $(this).find(".toggle-icon").toggleClass("rotated");
 });
 
-$("#disturb-now").on("click", function() {
+$("#disturb-now").on("click", function () {
     simWorker.postMessage({
         type: "disturb",
         strength: Number($("#d-strength").val())
     });
 });
 
-$("#steps-per-frame, #record-interval").on("input change", function() {
+$("#steps-per-frame, #record-interval").on("input change", function () {
     simWorker.postMessage({
         type: "updateDisplayParams",
         steps_per_frame: Number($("#steps-per-frame").val()) || 1,
@@ -360,14 +362,14 @@ $("#steps-per-frame, #record-interval").on("input change", function() {
 });
 
 // ── Genome panel ──────────────────────────────────────────────────────────────
-$("#toggle-genomes").on("click", function() {
+$("#toggle-genomes").on("click", function () {
     const content = $("#genomes-content");
     const isHidden = content.css("display") === "none";
     content.css("display", isHidden ? "block" : "none");
     $(this).find(".toggle-icon").text(isHidden ? "▼" : "▶");
 });
 
-$("#btn-export-genomes").on("click", function() {
+$("#btn-export-genomes").on("click", function () {
     $("#genomes-status").text("Exporting...");
     simWorker.postMessage({ type: "export" });
 });
@@ -377,7 +379,7 @@ function handleExportedGenomes(genomes) {
     $("#genomes-status").text(`Exported ${genomes.length} unique genome${genomes.length === 1 ? "" : "s"}.`);
 }
 
-$("#btn-import-genomes").on("click", function() {
+$("#btn-import-genomes").on("click", function () {
     const lines = $("#genome-textarea").val().split("\n").map(s => s.trim()).filter(s => s.length > 0);
     if (lines.length === 0) {
         $("#genomes-status").text("No genomes to import.");
@@ -397,7 +399,7 @@ $("#btn-import-genomes").on("click", function() {
     simWorker.postMessage({ type: "init", params, genomes: lines });
 });
 
-$("#btn-copy-genomes").on("click", function() {
+$("#btn-copy-genomes").on("click", function () {
     const text = $("#genome-textarea").val();
     navigator.clipboard.writeText(text).then(() => {
         const btn = $(this);
@@ -408,25 +410,25 @@ $("#btn-copy-genomes").on("click", function() {
 
 // ── Brush mode ────────────────────────────────────────────────────────────────
 
-$("#brush-toggle").on("click", function() {
+$("#brush-toggle").on("click", function () {
     brushMode = !brushMode;
     $(this).toggleClass("active");
     canvas.classList.toggle("brush-mode", brushMode);
 });
 
-canvas.addEventListener("mousedown", function(event) {
+canvas.addEventListener("mousedown", function (event) {
     if (!brushMode) return;
     isPainting = true;
     erasePlantAt(event);
 });
 
-canvas.addEventListener("mousemove", function(event) {
+canvas.addEventListener("mousemove", function (event) {
     if (!brushMode || !isPainting) return;
     erasePlantAt(event);
 });
 
-canvas.addEventListener("mouseup", function() { isPainting = false; });
-canvas.addEventListener("mouseleave", function() { isPainting = false; });
+canvas.addEventListener("mouseup", function () { isPainting = false; });
+canvas.addEventListener("mouseleave", function () { isPainting = false; });
 
 function erasePlantAt(event) {
     const rect = canvas.getBoundingClientRect();
@@ -484,7 +486,7 @@ function buildWidgets() {
 
     $("#params-form").html(html + actionMapHtml);
 
-    $(".info-icon").on("click", function() {
+    $(".info-icon").on("click", function () {
         $(this).parent().next(".param-description").toggleClass("show");
     });
 }
@@ -504,13 +506,13 @@ function updateWidgetsFromJson() {
         }
         if (params.disturbance_interval !== undefined) $("#d-interval").val(params.disturbance_interval);
         if (params.disturbance_strength !== undefined) $("#d-strength").val(params.disturbance_strength);
-    } catch(e) { /* ignore invalid JSON */ }
+    } catch (e) { /* ignore invalid JSON */ }
 }
 
 function updateJsonFromWidgets() {
     try {
         let params = {};
-        try { params = JSON.parse($("#params").val()); } catch(e) {}
+        try { params = JSON.parse($("#params").val()); } catch (e) { }
         widgetIds.forEach(id => {
             let val = $(`#w_${id}`).val();
             if (!isNaN(val) && val.trim() !== "") val = Number(val);
@@ -522,12 +524,12 @@ function updateJsonFromWidgets() {
         params.disturbance_interval = Number($("#d-interval").val());
         params.disturbance_strength = Number($("#d-strength").val());
         $("#params").val(JSON.stringify(params, null, 4));
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
 }
 
-$("#params").on("input", function() { updateWidgetsFromJson(); });
-$("#params-form").on("input change", ".widget-input", function() { updateJsonFromWidgets(); });
-$("#d-interval, #d-strength").on("input change", function() { updateJsonFromWidgets(); });
+$("#params").on("input", function () { updateWidgetsFromJson(); });
+$("#params-form").on("input change", ".widget-input", function () { updateJsonFromWidgets(); });
+$("#d-interval, #d-strength").on("input change", function () { updateJsonFromWidgets(); });
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
 const params_p = new SimulationParams({
