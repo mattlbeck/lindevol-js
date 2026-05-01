@@ -101,6 +101,10 @@
             image-rendering: pixelated;
         }
 
+        .charts-dashboard canvas {
+            max-height: 150px;
+        }
+
         .cell-info {
             margin-top: 16px;
             font-family: monospace;
@@ -639,31 +643,59 @@
             <!-- Charts -->
             <div class="charts-dashboard">
                 <div class="glass-panel">
-                    <h3>Population &amp; Cells</h3>
+                    <h3>Population &amp; Diversity</h3>
                     <canvas id="chart-population"></canvas>
                 </div>
                 <div class="glass-panel">
-                    <h3>Average Plant Size</h3>
+                    <h3>Average Size &amp; Energy</h3>
+                    <canvas id="chart-avg-size-energy"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Active Genes Per Genotype</h3>
+                    <canvas id="chart-active-genes"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Average Age</h3>
+                    <canvas id="chart-avg-age"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Seeds (per step)</h3>
+                    <canvas id="chart-seeds"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Births &amp; Deaths (per step)</h3>
+                    <canvas id="chart-birth-death"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Plant Attacks (per step)</h3>
+                    <canvas id="chart-attacks"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Average Death Probability</h3>
+                    <canvas id="chart-death-prob"></canvas>
+                </div>
+                <div class="glass-panel">
+                    <h3>Distribution: Plant Size</h3>
                     <canvas id="chart-plant-size"></canvas>
                 </div>
                 <div class="glass-panel">
-                    <h3>Average Plant Height</h3>
+                    <h3>Distribution: Plant Height</h3>
                     <canvas id="chart-plant-height"></canvas>
                 </div>
                 <div class="glass-panel">
-                    <h3>Average Genome Size</h3>
+                    <h3>Distribution: Genome Size</h3>
                     <canvas id="chart-genome-size"></canvas>
                 </div>
                 <div class="glass-panel">
-                    <h3>Average Mutation Exponent</h3>
+                    <h3>Distribution: Mutation Exponent</h3>
                     <canvas id="chart-mut-exp"></canvas>
                 </div>
                 <div class="glass-panel">
-                    <h3>Structural Divergence (Pairwise Levenshtein)</h3>
+                    <h3>Structural Divergence</h3>
                     <canvas id="chart-genetic-distance"></canvas>
                 </div>
                 <div class="glass-panel">
-                    <h3>Allele Richness (Shannon Entropy)</h3>
+                    <h3>Allele Richness</h3>
                     <canvas id="chart-allele-entropy"></canvas>
                 </div>
             </div>
