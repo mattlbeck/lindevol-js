@@ -134,7 +134,12 @@ function exportGenomes() {
         seen.add(plant.genome.serialize());
     });
     const genomes = Array.from(seen);
-    self.postMessage({ type: "exportedGenomes", genomes });
+    const exportBundle = {
+        action_map: simulation.params.action_map,
+        genome_interpreter: simulation.params.genome_interpreter,
+        genomes
+    };
+    self.postMessage({ type: "exportedGenomes", bundle: exportBundle });
 }
 
 function pushFrame() {

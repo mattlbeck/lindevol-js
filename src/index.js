@@ -321,6 +321,18 @@ $("#run").on("click", function () {
     simWorker.postMessage({ type: run ? "start" : "stop" });
 });
 
+// Track whether the form params are in sync with the running simulation
+let activeParams = null;  // params actually used by the running sim
+
+function markParamsDirty() {
+    if (!activeParams) return;
+    const currentJson = $("#params").val();
+    const isDirty = currentJson !== JSON.stringify(activeParams, null, 4);
+    $("#params-dirty-badge").toggle(isDirty);
+    // Apply amber glow to the params toggle button as a subtle indicator
+    $("#toggle-params").toggleClass("params-panel-dirty", isDirty);
+}
+
 $("#reload").on("click", function () {
     if (run) {
         run = false;
@@ -328,6 +340,15 @@ $("#reload").on("click", function () {
         simWorker.postMessage({ type: "stop" });
     }
     reloadSim();
+});
+
+$("#btn-apply-restart").on("click", function () {
+    if (run) {
+        run = false;
+        $("#run").text("Run").removeClass("btn-danger").addClass("btn-success");
+        simWorker.postMessage({ type: "stop" });
+    }
+    applyAndRestart();
 });
 
 $("#toggle-display").on("click", function () {
@@ -374,29 +395,78 @@ $("#btn-export-genomes").on("click", function () {
     simWorker.postMessage({ type: "export" });
 });
 
-function handleExportedGenomes(genomes) {
-    $("#genome-textarea").val(genomes.join("\n"));
-    $("#genomes-status").text(`Exported ${genomes.length} unique genome${genomes.length === 1 ? "" : "s"}.`);
+function handleExportedGenomes(bundle) {
+    // Write the bundle as formatted JSON into the textarea
+    $("#genome-textarea").val(JSON.stringify(bundle, null, 2));
+    $("#genomes-status").text(`Exported ${bundle.genomes.length} unique genome${bundle.genomes.length === 1 ? "" : "s"}.`);
 }
 
 $("#btn-import-genomes").on("click", function () {
-    const lines = $("#genome-textarea").val().split("\n").map(s => s.trim()).filter(s => s.length > 0);
-    if (lines.length === 0) {
+    const raw = $("#genome-textarea").val().trim();
+    if (!raw) {
         $("#genomes-status").text("No genomes to import.");
         return;
     }
-    if (run) {
-        run = false;
-        $("#run").text("Run").removeClass("btn-danger").addClass("btn-success");
-        simWorker.postMessage({ type: "stop" });
+
+    // Try to parse as JSON bundle (new format)
+    let genomeLines = [];
+    let bundleActionMap = null;
+    let bundleInterpreter = null;
+    try {
+        const bundle = JSON.parse(raw);
+        if (bundle.genomes && Array.isArray(bundle.genomes)) {
+            genomeLines = bundle.genomes;
+            bundleActionMap = bundle.action_map || null;
+            bundleInterpreter = bundle.genome_interpreter || null;
+        } else {
+            throw new Error("Not a genome bundle");
+        }
+    } catch (e) {
+        // Fall back: treat as plain-text one-genome-per-line (legacy format)
+        genomeLines = raw.split("\n").map(s => s.trim()).filter(s => s.length > 0);
     }
-    $("#genomes-status").text(`Seeding simulation with ${lines.length} genome${lines.length === 1 ? "" : "s"}...`);
-    const params = JSON.parse($("#params").val());
-    params.cellSize = cellSize;
-    params.steps_per_frame = Number($("#steps-per-frame").val()) || 1;
-    params.record_interval = Number($("#record-interval").val()) || 10;
-    initCharts();
-    simWorker.postMessage({ type: "init", params, genomes: lines });
+
+    if (genomeLines.length === 0) {
+        $("#genomes-status").text("No genomes found in the textarea.");
+        return;
+    }
+
+    // Check for action_map / interpreter mismatch
+    let mismatchWarning = "";
+    if (bundleActionMap || bundleInterpreter) {
+        const currentParams = JSON.parse($("#params").val());
+        const amMismatch = bundleActionMap &&
+            JSON.stringify(bundleActionMap) !== JSON.stringify(currentParams.action_map);
+        const interpMismatch = bundleInterpreter &&
+            bundleInterpreter !== currentParams.genome_interpreter;
+        if (amMismatch || interpMismatch) {
+            const details = [];
+            if (amMismatch) details.push(`action_map: [${bundleActionMap}] → [${currentParams.action_map}]`);
+            if (interpMismatch) details.push(`interpreter: ${bundleInterpreter} → ${currentParams.genome_interpreter}`);
+            mismatchWarning = `⚠️ Parameter mismatch:\n${details.join("\n")}\n\nThese genomes were evolved with different parameters. Import anyway? The bytes will be reinterpreted under the current action map.`;
+        }
+    }
+
+    const proceed = () => {
+        if (run) {
+            run = false;
+            $("#run").text("Run").removeClass("btn-danger").addClass("btn-success");
+            simWorker.postMessage({ type: "stop" });
+        }
+        $("#genomes-status").text(`Seeding simulation with ${genomeLines.length} genome${genomeLines.length === 1 ? "" : "s"}...`);
+        const params = JSON.parse($("#params").val());
+        activeParams = params;
+        initCharts();
+        simWorker.postMessage({ type: "init", params: prepareWorkerParams(params), genomes: genomeLines });
+        markParamsDirty();
+    };
+
+    if (mismatchWarning) {
+        if (confirm(mismatchWarning)) proceed();
+        else $("#genomes-status").text("Import cancelled.");
+    } else {
+        proceed();
+    }
 });
 
 $("#btn-copy-genomes").on("click", function () {
@@ -506,6 +576,8 @@ function updateWidgetsFromJson() {
         }
         if (params.disturbance_interval !== undefined) $("#d-interval").val(params.disturbance_interval);
         if (params.disturbance_strength !== undefined) $("#d-strength").val(params.disturbance_strength);
+        if (params.steps_per_frame !== undefined) $("#steps-per-frame").val(params.steps_per_frame);
+        if (params.record_interval !== undefined) $("#record-interval").val(params.record_interval);
     } catch (e) { /* ignore invalid JSON */ }
 }
 
@@ -523,13 +595,15 @@ function updateJsonFromWidgets() {
         params.action_map = action_map;
         params.disturbance_interval = Number($("#d-interval").val());
         params.disturbance_strength = Number($("#d-strength").val());
+        params.steps_per_frame = Number($("#steps-per-frame").val());
+        params.record_interval = Number($("#record-interval").val());
         $("#params").val(JSON.stringify(params, null, 4));
     } catch (e) { console.error(e); }
 }
 
-$("#params").on("input", function () { updateWidgetsFromJson(); });
-$("#params-form").on("input change", ".widget-input", function () { updateJsonFromWidgets(); });
-$("#d-interval, #d-strength").on("input change", function () { updateJsonFromWidgets(); });
+$("#params").on("input", function () { updateWidgetsFromJson(); markParamsDirty(); });
+$("#params-form").on("input change", ".widget-input", function () { updateJsonFromWidgets(); markParamsDirty(); });
+$("#d-interval, #d-strength, #steps-per-frame, #record-interval").on("input change", function () { updateJsonFromWidgets(); markParamsDirty(); });
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
 const params_p = new SimulationParams({
@@ -553,14 +627,38 @@ const params_p = new SimulationParams({
 $("#params").val(JSON.stringify(params_p, null, 4));
 updateWidgetsFromJson();
 
-// ── Reload ────────────────────────────────────────────────────────────────────
-function reloadSim() {
-    const params = JSON.parse($("#params").val());
-    params.cellSize = cellSize;
-    params.steps_per_frame = Number($("#steps-per-frame").val()) || 1;
-    params.record_interval = Number($("#record-interval").val()) || 10;
-    initCharts();
-    simWorker.postMessage({ type: "init", params });
+// ── Reload / Restart ──────────────────────────────────────────────────────────
+function prepareWorkerParams(params) {
+    return {
+        ...params,
+        cellSize: cellSize,
+        steps_per_frame: Number($("#steps-per-frame").val()) || 1,
+        record_interval: Number($("#record-interval").val()) || 10
+    };
 }
 
-reloadSim();
+function reloadSim() {
+    if (!activeParams) {
+        applyAndRestart();
+        return;
+    }
+    // Restart with CURRENTLY ACTIVE parameters (not necessarily what is in the form)
+    initCharts();
+    simWorker.postMessage({ type: "init", params: prepareWorkerParams(activeParams) });
+    markParamsDirty();
+}
+
+function applyAndRestart() {
+    // Read new parameters from the form/JSON panel
+    try {
+        const params = JSON.parse($("#params").val());
+        activeParams = params;
+        initCharts();
+        simWorker.postMessage({ type: "init", params: prepareWorkerParams(activeParams) });
+        markParamsDirty();
+    } catch (e) {
+        alert("Invalid JSON in parameters. Please fix before applying.");
+    }
+}
+
+applyAndRestart();
