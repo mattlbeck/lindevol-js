@@ -1,6 +1,13 @@
 # LindEvol-JS
 
-A JavaScript implementation of the LindEvol simulation.
+A JavaScript implementation of the LindEvol artificial ecology simulation.
+
+**[▶️ Play Live Simulation](https://mattlbeck.github.io/lindevol-js/)**
+
+## Documentation
+
+- [Technical Guide (`TECHNICAL.md`)](TECHNICAL.md): Detailed explanation of core simulation equations, genomic interpreters, and genetic diversity metrics.
+- [Parameter Reference (`PARAMETERS.md`)](PARAMETERS.md): Complete list of configuration parameters and their effects.
 
 ## Setup
 
