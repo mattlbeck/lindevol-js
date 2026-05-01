@@ -1,6 +1,8 @@
 # LindEvol-JS
 
-A JavaScript implementation of the LindEvol artificial ecology simulation.
+A JavaScript implementation of the LindEvol artificial life simulation.
+
+<img width="1248" height="130" alt="Screenshot 2026-05-01 at 23 56 41" src="https://github.com/user-attachments/assets/67ab8569-b083-4591-8e39-c52555f0961d" />
 
 **[▶️ Play Live Simulation](https://mattlbeck.github.io/lindevol-js/)**
 
