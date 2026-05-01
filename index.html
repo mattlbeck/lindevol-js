@@ -382,16 +382,36 @@
                         <div class="disturbance-console">
                             <div class="form-group">
                                 <label for="d-interval">Interval (steps, 0=off)</label>
-                                <input type="number" id="d-interval" class="form-control" value="0" min="0" step="1">
+                                <input type="number" id="d-interval" class="form-control widget-input" value="0" min="0" step="1">
                             </div>
                             <div class="form-group">
                                 <label for="d-strength">Strength (0–1)</label>
-                                <input type="number" id="d-strength" class="form-control" value="0.1" min="0" max="1"
-                                    step="0.01">
+                                <input type="number" id="d-strength" class="form-control widget-input" value="0.1" min="0" max="1" step="0.01">
                             </div>
-                            <button class="btn btn-disturb" id="apply-disturbance">Apply Settings</button>
                             <button class="btn btn-disturb" id="disturb-now">⚡ Disturb Now</button>
                             <button class="btn btn-brush" id="brush-toggle">🖌️ Brush Mode</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display Settings -->
+            <div class="collapsible-section">
+                <button class="collapsible-toggle" id="toggle-display">
+                    <span>🖥️ Display Settings</span>
+                    <span class="toggle-icon">▼</span>
+                </button>
+                <div class="collapsible-content" id="display-content">
+                    <div class="glass-panel">
+                        <div class="disturbance-console">
+                            <div class="form-group">
+                                <label for="steps-per-frame" title="The number of simulation steps to compute before drawing the frame to the screen. Increase this to uncap simulation speed.">Steps Per Frame</label>
+                                <input type="number" id="steps-per-frame" class="form-control" value="1" min="1" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="record-interval" title="How often (in simulation steps) data metrics are recorded and charts are updated.">Record Interval</label>
+                                <input type="number" id="record-interval" class="form-control" value="10" min="1" step="1">
+                            </div>
                         </div>
                     </div>
                 </div>
