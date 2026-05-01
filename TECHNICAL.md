@@ -39,13 +39,13 @@ When a seed is spawned, its genome is subjected to potential mutations. The prob
 
 **Equation:**
 
-$$P(\text{event}) = p_{\text{event}} \times (\text{mut\_prob})^{\text{mut\_exp}}$$
+$$P(\text{event}) = p_{\text{event}} \times (P_{\text{mut}})^{E_{\text{mut}}}$$
 
 
 **Parameters:**
 - $p_{\text{event}}$: The base probability of the specific event type (`mut_replace`, `mut_insert`, or `mut_delete`).
-- `mut_prob`: The global base modifier for mutation scaling.
-- `mut_exp`: An inherited, evolvable trait specific to the individual genome. It acts as the exponent to `mut_prob`. A higher `mut_exp` (when `mut_prob < 1`) exponentially decreases the overall probability of a mutation occurring.
+- $P_{\text{mut}}$ (`mut_prob`): The global base modifier for mutation scaling.
+- $E_{\text{mut}}$ (`mut_exp`): An inherited, evolvable trait specific to the individual genome. It acts as the exponent to `mut_prob`. A higher `mut_exp` (when `mut_prob < 1`) exponentially decreases the overall probability of a mutation occurring.
 
 *Note:* If an event occurs, `mut_units` determines how many bytes are inserted or deleted in a single event.
 
