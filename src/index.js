@@ -48,7 +48,7 @@ simWorker.onmessage = function (event) {
             renderCellInfo(msg);
             break;
         case "exportedGenomes":
-            handleExportedGenomes(msg.genomes);
+            handleExportedGenomes(msg.bundle);
             break;
     }
 };
