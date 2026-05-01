@@ -28,7 +28,7 @@
         }
 
         .dashboard-container {
-            max-width: 1600px;
+            width: 100%;
             margin: 0 auto;
         }
 
@@ -366,7 +366,13 @@
         </header>
 
         <div class="main-content">
-            <div class="sim-panel glass-panel">
+            <div class="glass-panel sim-panel">
+                <div class="sim-toolbar" style="margin-bottom: 12px; display: flex; gap: 8px;">
+                    <button class="btn btn-secondary btn-sm" id="zoom-out">🔍 -</button>
+                    <button class="btn btn-secondary btn-sm" id="zoom-in">🔍 +</button>
+                    <button class="btn btn-secondary btn-sm" id="zoom-reset">1:1</button>
+                    <button class="btn btn-secondary btn-sm" id="zoom-fit">Fit Screen</button>
+                </div>
                 <canvas id="mainbox" width="2500" height="400"></canvas>
                 <div id="cellinfo" class="cell-info">Click a cell to see info...</div>
             </div>
